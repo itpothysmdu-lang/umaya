@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Madurai Branch Bundle Tracker</title>
+    <title>Pondy Branch Bundle Tracker</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         
@@ -422,11 +422,14 @@
         </div>
 
         <div class="reports-grid">
-            <!-- Report 1: No of Bundles in PDY BEACH WH -->
+            <!-- Report 1: No of Bundles in PDY BEACH WH
+submitted -->
             <div class="report-card">
                 <div class="report-header">
-                    <h2>No of Bundles in PDY BEACH WH</h2>
-                    <button class="copy-btn" onclick="copyReportAsImage('report1-content', 'No of Bundles in PDY BEACH WH')">
+                    <h2>No of Bundles in PDY BEACH WH
+submitted</h2>
+                    <button class="copy-btn" onclick="copyReportAsImage('report1-content', 'No of Bundles in PDY BEACH WH
+submitted')">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                         Copy as Image
                     </button>
@@ -436,11 +439,14 @@
                 </div>
             </div>
 
-            <!-- Report 2: Aging Report PDY BEACH WH -->
+            <!-- Report 2: Aging Report PDY BEACH WH
+submitted -->
             <div class="report-card">
                 <div class="report-header">
-                    <h2>Aging Report PDY BEACH WH</h2>
-                    <button class="copy-btn" onclick="copyReportAsImage('report2-content', 'Aging Report PDY BEACH WH')">
+                    <h2>Aging Report PDY BEACH WH
+submitted</h2>
+                    <button class="copy-btn" onclick="copyReportAsImage('report2-content', 'Aging Report PDY BEACH WH
+submitted')">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                         Copy as Image
                     </button>
@@ -614,43 +620,46 @@
             alertArea.innerHTML = '';
         }
 
-        // Report 1: No of Bundles in PDY BEACH WH
-        function generateReport1() {
-            const filtered = csvData.filter(row => {
-                const status = (row.Status || '').trim().toLowerCase();
-                const source = (row.Source || '').trim();
-                return status === 'draft' && source === 'PDY BEACH WH';
-            });
+       // Report 1: No of Bundles in PDY BEACH WH
+submitted
+function generateReport1() {
+    const filtered = csvData.filter(row => {
+        const status = (row.Status || '').trim().toLowerCase();
+        const source = (row.Source || '').trim();
+        // status draft or submit AND source PDY BEACH WH
+submitted
+        return (status === 'draft' || status === 'submitted') && source === 'PDY BEACH WH
+submitted';
+    });
 
-            console.log('Report 1 - Total CSV records:', csvData.length);
-            console.log('Report 1 - Filtered records (draft + PDY BEACH WH):', filtered.length);
-            console.log('Report 1 - Sample filtered records:', filtered.slice(0, 5));
-            console.log('Report 1 - All unique Status values:', [...new Set(csvData.map(r => r.Status))]);
-            console.log('Report 1 - All unique Source values:', [...new Set(csvData.map(r => r.Source))]);
+    const groupedByDivision = {};
+    let totalBundles = 0;
 
-            const groupedByDivision = {};
-            let totalBundles = 0;
-            filtered.forEach(row => {
-                const division = row.Division || 'Unassigned';
-                const bundles = parseInt(row['No Of Bundles']) || 0;
-                groupedByDivision[division] = (groupedByDivision[division] || 0) + bundles;
-                totalBundles += bundles;
-            });
+    filtered.forEach(row => {
+        const division = row.Division || 'Unassigned';
+        const bundles = parseInt(row['No Of Bundles']) || 0;
 
-            console.log('Report 1 - Grouped data by Division:', groupedByDivision);
-            console.log('Report 1 - Total bundles count:', totalBundles);
-            renderTable('report1', groupedByDivision, 'Division', 'No of Bundles');
-        }
+        groupedByDivision[division] = (groupedByDivision[division] || 0) + bundles;
+        totalBundles += bundles;
+    });
+
+    renderTable('report1', groupedByDivision, 'Division', 'No of Bundles');
+}
+
 
         // Report 2: Aging Report PDY BEACH WH
+submitted
         function generateReport2() {
             const filtered = csvData.filter(row => {
                 const status = (row.Status || '').trim().toLowerCase();
                 const source = (row.Source || '').trim();
-                return status === 'draft' && source === 'PDY BEACH WH';
+                // FIXED: use OR between two comparisons
+                return (status === 'draft' || status === 'submitted') && source === 'PDY BEACH WH
+submitted';
             });
 
             const agingByDivision = {};
+
             filtered.forEach(row => {
                 const division = row.Division || 'Unassigned';
                 const bundles = parseInt(row['No Of Bundles']) || 0;
@@ -789,14 +798,15 @@
                 html += '</tr></thead><tbody>';
 
                 entries.forEach(row => {
-                    html += '<tr>';                html += `<td>${row['Entry ID'] || '-'}</td>`;
-                html += `<td>${row['LR No'] || '-'}</td>`;
-                html += `<td>${row['Bill No'] || '-'}</td>`;
-                html += `<td>${row['Bill Amt'] || '-'}</td>`;
-                html += `<td>${row['No Of Bundles'] || '-'}</td>`;
-                html += `<td>${row['Supplier'] || '-'}</td>`;
-                html += `<td>${row['Purchaser'] || '-'}</td>`;
-                html += `<td>${row['Entry Date'] || '-'}</td>`;
+                    html += '<tr>';
+                    html += `<td>${row['Entry ID'] || '-'}</td>`;
+                    html += `<td>${row['LR No'] || '-'}</td>`;
+                    html += `<td>${row['Bill No'] || '-'}</td>`;
+                    html += `<td>${row['Bill Amt'] || '-'}</td>`;
+                    html += `<td>${row['No Of Bundles'] || '-'}</td>`;
+                    html += `<td>${row['Supplier'] || '-'}</td>`;
+                    html += `<td>${row['Purchaser'] || '-'}</td>`;
+                    html += `<td>${row['Entry Date'] || '-'}</td>`;
                     html += `<td><span class="status-badge">${row['Status'] || '-'}</span></td>`;
                     html += '</tr>';
                 });
@@ -913,7 +923,7 @@
             element.innerHTML = html;
         }
 
-        // Copy report as image function using dom-to-image (more reliable than html2canvas)
+        // Copy report as image function using dom-to-image
         async function copyReportAsImage(elementId, reportTitle) {
             const button = event.target.closest('.copy-btn');
             const originalText = button.innerHTML;
@@ -922,7 +932,6 @@
                 button.innerHTML = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Processing...';
                 button.disabled = true;
 
-                // Load dom-to-image library (more reliable for clipboard)
                 if (typeof domtoimage === 'undefined') {
                     const script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/dom-to-image@2.6.0/dist/dom-to-image.min.js';
@@ -936,7 +945,6 @@
                 const element = document.getElementById(elementId);
                 const dateStr = uploadDate ? uploadDate.toLocaleDateString('en-IN') : new Date().toLocaleDateString('en-IN');
                 
-                // Create wrapper with title
                 const wrapper = document.createElement('div');
                 wrapper.style.cssText = 'background: white; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
                 
@@ -954,7 +962,6 @@
                 wrapper.appendChild(contentClone);
                 document.body.appendChild(wrapper);
 
-                // Generate PNG blob
                 const blob = await domtoimage.toBlob(wrapper, {
                     bgcolor: '#ffffff',
                     quality: 1,
@@ -968,7 +975,6 @@
 
                 document.body.removeChild(wrapper);
 
-                // Try clipboard API first
                 if (navigator.clipboard && ClipboardItem) {
                     try {
                         await navigator.clipboard.write([
@@ -984,8 +990,6 @@
                             button.disabled = false;
                         }, 2000);
                     } catch (clipErr) {
-                        console.log('Clipboard API failed, using download fallback:', clipErr);
-                        // Fallback: download image
                         const url = URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.download = `${reportTitle.replace(/\s+/g, '_')}_${dateStr}.png`;
@@ -1001,7 +1005,6 @@
                         }, 2000);
                     }
                 } else {
-                    // Browser doesn't support Clipboard API, download directly
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.download = `${reportTitle.replace(/\s+/g, '_')}_${dateStr}.png`;
@@ -1027,9 +1030,7 @@
             }
         }
 
-        // Initialize with empty reports
         clearReports();
     </script>
 </body>
 </html>
-
