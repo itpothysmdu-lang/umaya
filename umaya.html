@@ -728,8 +728,6 @@ function generateReport1() {
             csvData.forEach((row, index) => {
                 const key = [
                     (row['Bill No'] || '').trim(),
-                    (row['Bill Amt'] || '').trim(),
-                    (row['No Of Bundles'] || '').trim(),
                     (row['Supplier'] || '').trim(),
                     (row['Purchaser'] || '').trim()
                 ].join('|');
