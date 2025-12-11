@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -237,10 +236,15 @@
             font-weight: 500;
         }
 
+        .aging-0-21 { color: var(--color-success); }
+        .aging-22-45 { color: #e68161; }
+        .aging-46-90 { color: var(--color-warning); }
+        .aging-90plus { color: var(--color-error); font-weight: 600; }
+        
+        /* Keep original classes for Report 4 */
         .aging-0-30 { color: var(--color-success); }
         .aging-31-60 { color: #e68161; }
         .aging-61-90 { color: var(--color-warning); }
-        .aging-90plus { color: var(--color-error); font-weight: 600; }
 
         .total-row {
             font-weight: 700;
@@ -479,12 +483,7 @@
                 </div>
             </div>
 
-            <!-- Report 5: 
-
-
-
-
- Entries by Division -->
+            <!-- Report 5: Duplicate Entries by Division -->
             <div class="report-card" style="grid-column: 1 / -1;">
                 <div class="report-header">
                     <h2>Duplicate Entries by Division</h2>
@@ -620,36 +619,33 @@
             alertArea.innerHTML = '';
         }
 
-       // Report 1: No of Bundles in MDU JAWAHAR WH
-function generateReport1() {
-    const filtered = csvData.filter(row => {
-        const status = (row.Status || '').trim().toLowerCase();
-        const source = (row.Source || '').trim();
-        // status draft or submit AND source MDU JAWAHAR WH
-        return (status === 'draft' || status === 'submitted') && source === 'MDU JAWAHAR WH';
-    });
+        // Report 1: No of Bundles in MDU JAWAHAR WH
+        function generateReport1() {
+            const filtered = csvData.filter(row => {
+                const status = (row.Status || '').trim().toLowerCase();
+                const source = (row.Source || '').trim();
+                return (status === 'draft' || status === 'submitted') && source === 'MDU JAWAHAR WH';
+            });
 
-    const groupedByDivision = {};
-    let totalBundles = 0;
+            const groupedByDivision = {};
+            let totalBundles = 0;
 
-    filtered.forEach(row => {
-        const division = row.Division || 'Unassigned';
-        const bundles = parseInt(row['No Of Bundles']) || 0;
+            filtered.forEach(row => {
+                const division = row.Division || 'Unassigned';
+                const bundles = parseInt(row['No Of Bundles']) || 0;
 
-        groupedByDivision[division] = (groupedByDivision[division] || 0) + bundles;
-        totalBundles += bundles;
-    });
+                groupedByDivision[division] = (groupedByDivision[division] || 0) + bundles;
+                totalBundles += bundles;
+            });
 
-    renderTable('report1', groupedByDivision, 'Division', 'No of Bundles');
-}
+            renderTable('report1', groupedByDivision, 'Division', 'No of Bundles');
+        }
 
-
-        // Report 2: Aging Report MDU JAWAHAR WH
+        // Report 2: Aging Report MDU JAWAHAR WH - NEW 21-DAY BUCKETS
         function generateReport2() {
             const filtered = csvData.filter(row => {
                 const status = (row.Status || '').trim().toLowerCase();
                 const source = (row.Source || '').trim();
-                // FIXED: use OR between two comparisons
                 return (status === 'draft' || status === 'submitted') && source === 'MDU JAWAHAR WH';
             });
 
@@ -659,13 +655,13 @@ function generateReport1() {
                 const division = row.Division || 'Unassigned';
                 const bundles = parseInt(row['No Of Bundles']) || 0;
                 const entryDate = parseDate(row['Entry Date']);
-                const aging = calculateAging(entryDate);
+                const aging = calculateAging21Days(entryDate);
 
                 if (!agingByDivision[division]) {
                     agingByDivision[division] = {
-                        '0-30 days': 0,
-                        '31-60 days': 0,
-                        '61-90 days': 0,
+                        '0-21 days': 0,
+                        '22-45 days': 0,
+                        '46-90 days': 0,
                         '90+ days': 0,
                         total: 0
                     };
@@ -675,7 +671,7 @@ function generateReport1() {
                 agingByDivision[division].total += bundles;
             });
 
-            renderAgingTable('report2', agingByDivision);
+            renderAgingTable21Days('report2', agingByDivision);
         }
 
         // Report 3: Open WH No Of Bundles
@@ -695,7 +691,7 @@ function generateReport1() {
             renderTable('report3', groupedByDivision, 'Division', 'No of Bundles');
         }
 
-        // Report 4: Aging Report Open WH Received Bundles
+        // Report 4: Aging Report Open WH Received Bundles - ORIGINAL 30-DAY BUCKETS
         function generateReport4() {
             const filtered = csvData.filter(row => {
                 const status = (row.Status || '').trim().toLowerCase();
@@ -741,19 +737,16 @@ function generateReport1() {
                 if (!entryMap[key]) {
                     entryMap[key] = [];
                 }
-                entryMap[key].push({ ...row, originalIndex: index + 2 }); // +2 for header and 0-based index
+                entryMap[key].push({ ...row, originalIndex: index + 2 });
             });
 
             // Find duplicates (entries that appear more than once)
             const duplicates = [];
             Object.keys(entryMap).forEach(key => {
-                if (entryMap[key].length > 1 && key !== '||||') { // Exclude empty entries
+                if (entryMap[key].length > 1 && key !== '||||') {
                     duplicates.push(...entryMap[key]);
                 }
             });
-
-            console.log('Report 5 - Total duplicate entries found:', duplicates.length);
-            console.log('Report 5 - Sample duplicates:', duplicates.slice(0, 5));
 
             // Group duplicates by division
             const divisionGroups = {};
@@ -817,19 +810,17 @@ function generateReport1() {
         function parseDate(dateStr) {
             if (!dateStr) return new Date();
             
-            // Handle various date formats (DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD)
             const parts = dateStr.split(/[-\/]/);
             if (parts.length === 3) {
-                // Try DD/MM/YYYY format first
                 if (parts[0].length <= 2) {
                     return new Date(parts[2], parts[1] - 1, parts[0]);
                 }
-                // Try YYYY-MM-DD format
                 return new Date(parts[0], parts[1] - 1, parts[2]);
             }
             return new Date(dateStr);
         }
 
+        // Original aging calculation for Report 4 (30-day buckets)
         function calculateAging(entryDate) {
             const today = new Date();
             const diffTime = Math.abs(today - entryDate);
@@ -838,6 +829,18 @@ function generateReport1() {
             if (diffDays <= 30) return '0-30 days';
             if (diffDays <= 60) return '31-60 days';
             if (diffDays <= 90) return '61-90 days';
+            return '90+ days';
+        }
+
+        // NEW: 21-day aging calculation for Report 2
+        function calculateAging21Days(entryDate) {
+            const today = new Date();
+            const diffTime = Math.abs(today - entryDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays <= 21) return '0-21 days';
+            if (diffDays <= 45) return '22-45 days';
+            if (diffDays <= 90) return '46-90 days';
             return '90+ days';
         }
 
@@ -865,6 +868,7 @@ function generateReport1() {
             element.innerHTML = html;
         }
 
+        // Original aging table render for Report 4
         function renderAgingTable(elementId, data) {
             const element = document.getElementById(elementId);
             
@@ -908,6 +912,58 @@ function generateReport1() {
             html += `<td>${totals['0-30 days'].toLocaleString()}</td>`;
             html += `<td>${totals['31-60 days'].toLocaleString()}</td>`;
             html += `<td>${totals['61-90 days'].toLocaleString()}</td>`;
+            html += `<td>${totals['90+ days'].toLocaleString()}</td>`;
+            html += `<td>${totals.total.toLocaleString()}</td>`;
+            html += '</tr>';
+
+            html += '</tbody></table></div>';
+            element.innerHTML = html;
+        }
+
+        // NEW: 21-day aging table render for Report 2
+        function renderAgingTable21Days(elementId, data) {
+            const element = document.getElementById(elementId);
+            
+            if (Object.keys(data).length === 0) {
+                element.innerHTML = '<div class="no-data">No data available for this report</div>';
+                return;
+            }
+
+            let html = '<div class="table-wrapper"><table><thead><tr>';
+            html += '<th>Division</th><th>0-21 Days</th><th>22-45 Days</th><th>46-90 Days</th><th>90+ Days</th><th>Total</th>';
+            html += '</tr></thead><tbody>';
+
+            const totals = {
+                '0-21 days': 0,
+                '22-45 days': 0,
+                '46-90 days': 0,
+                '90+ days': 0,
+                total: 0
+            };
+
+            Object.keys(data).sort().forEach(division => {
+                const row = data[division];
+                html += '<tr>';
+                html += `<td>${division}</td>`;
+                html += `<td class="aging-cell aging-0-21">${row['0-21 days'].toLocaleString()}</td>`;
+                html += `<td class="aging-cell aging-22-45">${row['22-45 days'].toLocaleString()}</td>`;
+                html += `<td class="aging-cell aging-46-90">${row['46-90 days'].toLocaleString()}</td>`;
+                html += `<td class="aging-cell aging-90plus">${row['90+ days'].toLocaleString()}</td>`;
+                html += `<td style="font-weight: 600">${row.total.toLocaleString()}</td>`;
+                html += '</tr>';
+
+                totals['0-21 days'] += row['0-21 days'];
+                totals['22-45 days'] += row['22-45 days'];
+                totals['46-90 days'] += row['46-90 days'];
+                totals['90+ days'] += row['90+ days'];
+                totals.total += row.total;
+            });
+
+            html += '<tr class="total-row">';
+            html += '<td>Total</td>';
+            html += `<td>${totals['0-21 days'].toLocaleString()}</td>`;
+            html += `<td>${totals['22-45 days'].toLocaleString()}</td>`;
+            html += `<td>${totals['46-90 days'].toLocaleString()}</td>`;
             html += `<td>${totals['90+ days'].toLocaleString()}</td>`;
             html += `<td>${totals.total.toLocaleString()}</td>`;
             html += '</tr>';
@@ -1027,4 +1083,3 @@ function generateReport1() {
     </script>
 </body>
 </html>
-
