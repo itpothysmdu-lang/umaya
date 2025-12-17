@@ -147,7 +147,7 @@
 
         .reports-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(700px, 1fr));
             gap: 24px;
             margin-bottom: 24px;
         }
@@ -629,16 +629,40 @@
 
             const groupedByDivision = {};
             let totalBundles = 0;
+            let totalBillCount = 0;
 
             filtered.forEach(row => {
                 const division = row.Division || 'Unassigned';
                 const bundles = parseInt(row['No Of Bundles']) || 0;
+                const billNo = (row['Bill No'] || '').trim();
 
-                groupedByDivision[division] = (groupedByDivision[division] || 0) + bundles;
-                totalBundles += bundles;
+                if (!groupedByDivision[division]) {
+                    groupedByDivision[division] = {
+                        bundles: 0,
+                        billCount: new Set()
+                    };
+                }
+
+                groupedByDivision[division].bundles += bundles;
+                if (billNo) {
+                    groupedByDivision[division].billCount.add(billNo);
+                }
             });
 
-            renderTable('report1', groupedByDivision, 'Division', 'No of Bundles');
+            // Convert to format for display
+            const displayData = {};
+            Object.keys(groupedByDivision).forEach(division => {
+                const data = groupedByDivision[division];
+                totalBundles += data.bundles;
+                totalBillCount += data.billCount.size;
+                displayData[division] = {
+                    bundles: data.bundles,
+                    billCount: data.billCount.size,
+                    display: `${data.bundles.toLocaleString()} (${data.billCount.size})`
+                };
+            });
+
+            renderTableWithBillCount('report1', displayData, 'Division', 'No of Bundles (Bill Count)', totalBundles, totalBillCount);
         }
 
         // Report 2: Aging Report MDU JAWAHAR WH - NEW 21-DAY BUCKETS
@@ -650,10 +674,12 @@
             });
 
             const agingByDivision = {};
+            const billCountByDivision = {};
 
             filtered.forEach(row => {
                 const division = row.Division || 'Unassigned';
                 const bundles = parseInt(row['No Of Bundles']) || 0;
+                const billNo = (row['Bill No'] || '').trim();
                 const entryDate = parseDate(row['Entry Date']);
                 const aging = calculateAging21Days(entryDate);
 
@@ -667,11 +693,26 @@
                     };
                 }
 
+                if (!billCountByDivision[division]) {
+                    billCountByDivision[division] = {
+                        '0-21 days': new Set(),
+                        '22-45 days': new Set(),
+                        '46-90 days': new Set(),
+                        '90+ days': new Set(),
+                        total: new Set()
+                    };
+                }
+
                 agingByDivision[division][aging] += bundles;
                 agingByDivision[division].total += bundles;
+                
+                if (billNo) {
+                    billCountByDivision[division][aging].add(billNo);
+                    billCountByDivision[division].total.add(billNo);
+                }
             });
 
-            renderAgingTable21Days('report2', agingByDivision);
+            renderAgingTable21DaysWithBillCount('report2', agingByDivision, billCountByDivision);
         }
 
         // Report 3: Open WH No Of Bundles
@@ -682,13 +723,41 @@
             });
 
             const groupedByDivision = {};
+            let totalBundles = 0;
+            let totalBillCount = 0;
+
             filtered.forEach(row => {
                 const division = row.Division || 'Unassigned';
                 const bundles = parseInt(row['No Of Bundles']) || 0;
-                groupedByDivision[division] = (groupedByDivision[division] || 0) + bundles;
+                const billNo = (row['Bill No'] || '').trim();
+
+                if (!groupedByDivision[division]) {
+                    groupedByDivision[division] = {
+                        bundles: 0,
+                        billCount: new Set()
+                    };
+                }
+
+                groupedByDivision[division].bundles += bundles;
+                if (billNo) {
+                    groupedByDivision[division].billCount.add(billNo);
+                }
             });
 
-            renderTable('report3', groupedByDivision, 'Division', 'No of Bundles');
+            // Convert to format for display
+            const displayData = {};
+            Object.keys(groupedByDivision).forEach(division => {
+                const data = groupedByDivision[division];
+                totalBundles += data.bundles;
+                totalBillCount += data.billCount.size;
+                displayData[division] = {
+                    bundles: data.bundles,
+                    billCount: data.billCount.size,
+                    display: `${data.bundles.toLocaleString()} (${data.billCount.size})`
+                };
+            });
+
+            renderTableWithBillCount('report3', displayData, 'Division', 'No of Bundles (Bill Count)', totalBundles, totalBillCount);
         }
 
         // Report 4: Aging Report Open WH Received Bundles - ORIGINAL 30-DAY BUCKETS
@@ -699,9 +768,12 @@
             });
 
             const agingByDivision = {};
+            const billCountByDivision = {};
+
             filtered.forEach(row => {
                 const division = row.Division || 'Unassigned';
                 const bundles = parseInt(row['No Of Bundles']) || 0;
+                const billNo = (row['Bill No'] || '').trim();
                 const entryDate = parseDate(row['Entry Date']);
                 const aging = calculateAging(entryDate);
 
@@ -715,11 +787,26 @@
                     };
                 }
 
+                if (!billCountByDivision[division]) {
+                    billCountByDivision[division] = {
+                        '0-30 days': new Set(),
+                        '31-60 days': new Set(),
+                        '61-90 days': new Set(),
+                        '90+ days': new Set(),
+                        total: new Set()
+                    };
+                }
+
                 agingByDivision[division][aging] += bundles;
                 agingByDivision[division].total += bundles;
+                
+                if (billNo) {
+                    billCountByDivision[division][aging].add(billNo);
+                    billCountByDivision[division].total.add(billNo);
+                }
             });
 
-            renderAgingTable('report4', agingByDivision);
+            renderAgingTableWithBillCount('report4', agingByDivision, billCountByDivision);
         }
 
         // Report 5: Duplicate Entries by Division
@@ -844,7 +931,7 @@
             return '90+ days';
         }
 
-        function renderTable(elementId, data, col1Name, col2Name) {
+        function renderTableWithBillCount(elementId, data, col1Name, col2Name, totalBundles, totalBillCount) {
             const element = document.getElementById(elementId);
             
             if (Object.keys(data).length === 0) {
@@ -852,120 +939,168 @@
                 return;
             }
 
-            let total = 0;
             let html = '<div class="table-wrapper"><table><thead><tr>';
             html += `<th>${col1Name}</th><th>${col2Name}</th>`;
             html += '</tr></thead><tbody>';
 
             Object.keys(data).sort().forEach(key => {
                 const value = data[key];
-                total += value;
-                html += `<tr><td>${key}</td><td>${value.toLocaleString()}</td></tr>`;
+                html += `<tr><td>${key}</td><td>${value.display}</td></tr>`;
             });
 
-            html += `<tr class="total-row"><td>Total</td><td>${total.toLocaleString()}</td></tr>`;
+            html += `<tr class="total-row"><td>Total</td><td>${totalBundles.toLocaleString()} (${totalBillCount})</td></tr>`;
             html += '</tbody></table></div>';
             element.innerHTML = html;
         }
 
-        // Original aging table render for Report 4
-        function renderAgingTable(elementId, data) {
+        // Original aging table render for Report 4 with bill count
+        function renderAgingTableWithBillCount(elementId, agingData, billCountData) {
             const element = document.getElementById(elementId);
             
-            if (Object.keys(data).length === 0) {
+            if (Object.keys(agingData).length === 0) {
                 element.innerHTML = '<div class="no-data">No data available for this report</div>';
                 return;
             }
 
             let html = '<div class="table-wrapper"><table><thead><tr>';
-            html += '<th>Division</th><th>0-30 Days</th><th>31-60 Days</th><th>61-90 Days</th><th>90+ Days</th><th>Total</th>';
+            html += '<th>Division</th><th>0-30 Days</th><th>31-60 Days</th><th>61-90 Days</th><th>90+ Days</th><th>Total(Bill count)</th>';
             html += '</tr></thead><tbody>';
 
             const totals = {
-                '0-30 days': 0,
-                '31-60 days': 0,
-                '61-90 days': 0,
-                '90+ days': 0,
-                total: 0
+                '0-30 days': { bundles: 0, billCount: 0 },
+                '31-60 days': { bundles: 0, billCount: 0 },
+                '61-90 days': { bundles: 0, billCount: 0 },
+                '90+ days': { bundles: 0, billCount: 0 },
+                total: { bundles: 0, billCount: 0 }
             };
 
-            Object.keys(data).sort().forEach(division => {
-                const row = data[division];
+            Object.keys(agingData).sort().forEach(division => {
+                const row = agingData[division];
+                const billRow = billCountData[division];
+                
                 html += '<tr>';
                 html += `<td>${division}</td>`;
-                html += `<td class="aging-cell aging-0-30">${row['0-30 days'].toLocaleString()}</td>`;
-                html += `<td class="aging-cell aging-31-60">${row['31-60 days'].toLocaleString()}</td>`;
-                html += `<td class="aging-cell aging-61-90">${row['61-90 days'].toLocaleString()}</td>`;
-                html += `<td class="aging-cell aging-90plus">${row['90+ days'].toLocaleString()}</td>`;
-                html += `<td style="font-weight: 600">${row.total.toLocaleString()}</td>`;
+                
+                // 0-30 days with bill count
+                html += `<td class="aging-cell aging-0-30">${row['0-30 days'].toLocaleString()} (${billRow ? billRow['0-30 days'].size : 0})</td>`;
+                
+                // 31-60 days with bill count
+                html += `<td class="aging-cell aging-31-60">${row['31-60 days'].toLocaleString()} (${billRow ? billRow['31-60 days'].size : 0})</td>`;
+                
+                // 61-90 days with bill count
+                html += `<td class="aging-cell aging-61-90">${row['61-90 days'].toLocaleString()} (${billRow ? billRow['61-90 days'].size : 0})</td>`;
+                
+                // 90+ days with bill count
+                html += `<td class="aging-cell aging-90plus">${row['90+ days'].toLocaleString()} (${billRow ? billRow['90+ days'].size : 0})</td>`;
+                
+                // Total with bill count
+                html += `<td style="font-weight: 600">${row.total.toLocaleString()} (${billRow ? billRow.total.size : 0})</td>`;
                 html += '</tr>';
 
-                totals['0-30 days'] += row['0-30 days'];
-                totals['31-60 days'] += row['31-60 days'];
-                totals['61-90 days'] += row['61-90 days'];
-                totals['90+ days'] += row['90+ days'];
-                totals.total += row.total;
+                // Update totals
+                if (billRow) {
+                    totals['0-30 days'].bundles += row['0-30 days'];
+                    totals['0-30 days'].billCount += billRow['0-30 days'].size;
+                    
+                    totals['31-60 days'].bundles += row['31-60 days'];
+                    totals['31-60 days'].billCount += billRow['31-60 days'].size;
+                    
+                    totals['61-90 days'].bundles += row['61-90 days'];
+                    totals['61-90 days'].billCount += billRow['61-90 days'].size;
+                    
+                    totals['90+ days'].bundles += row['90+ days'];
+                    totals['90+ days'].billCount += billRow['90+ days'].size;
+                    
+                    totals.total.bundles += row.total;
+                    totals.total.billCount += billRow.total.size;
+                }
             });
 
+            // Total row
             html += '<tr class="total-row">';
             html += '<td>Total</td>';
-            html += `<td>${totals['0-30 days'].toLocaleString()}</td>`;
-            html += `<td>${totals['31-60 days'].toLocaleString()}</td>`;
-            html += `<td>${totals['61-90 days'].toLocaleString()}</td>`;
-            html += `<td>${totals['90+ days'].toLocaleString()}</td>`;
-            html += `<td>${totals.total.toLocaleString()}</td>`;
+            html += `<td>${totals['0-30 days'].bundles.toLocaleString()} (${totals['0-30 days'].billCount})</td>`;
+            html += `<td>${totals['31-60 days'].bundles.toLocaleString()} (${totals['31-60 days'].billCount})</td>`;
+            html += `<td>${totals['61-90 days'].bundles.toLocaleString()} (${totals['61-90 days'].billCount})</td>`;
+            html += `<td>${totals['90+ days'].bundles.toLocaleString()} (${totals['90+ days'].billCount})</td>`;
+            html += `<td>${totals.total.bundles.toLocaleString()} (${totals.total.billCount})</td>`;
             html += '</tr>';
 
             html += '</tbody></table></div>';
             element.innerHTML = html;
         }
 
-        // NEW: 21-day aging table render for Report 2
-        function renderAgingTable21Days(elementId, data) {
+        // NEW: 21-day aging table render for Report 2 with bill count
+        function renderAgingTable21DaysWithBillCount(elementId, agingData, billCountData) {
             const element = document.getElementById(elementId);
             
-            if (Object.keys(data).length === 0) {
+            if (Object.keys(agingData).length === 0) {
                 element.innerHTML = '<div class="no-data">No data available for this report</div>';
                 return;
             }
 
             let html = '<div class="table-wrapper"><table><thead><tr>';
-            html += '<th>Division</th><th>0-21 Days</th><th>22-45 Days</th><th>46-90 Days</th><th>90+ Days</th><th>Total</th>';
+            html += '<th>Division</th><th>0-21 Days</th><th>22-45 Days</th><th>46-90 Days</th><th>90+ Days</th><th>Total(Bill count)</th>';
             html += '</tr></thead><tbody>';
 
             const totals = {
-                '0-21 days': 0,
-                '22-45 days': 0,
-                '46-90 days': 0,
-                '90+ days': 0,
-                total: 0
+                '0-21 days': { bundles: 0, billCount: 0 },
+                '22-45 days': { bundles: 0, billCount: 0 },
+                '46-90 days': { bundles: 0, billCount: 0 },
+                '90+ days': { bundles: 0, billCount: 0 },
+                total: { bundles: 0, billCount: 0 }
             };
 
-            Object.keys(data).sort().forEach(division => {
-                const row = data[division];
+            Object.keys(agingData).sort().forEach(division => {
+                const row = agingData[division];
+                const billRow = billCountData[division];
+                
                 html += '<tr>';
                 html += `<td>${division}</td>`;
-                html += `<td class="aging-cell aging-0-21">${row['0-21 days'].toLocaleString()}</td>`;
-                html += `<td class="aging-cell aging-22-45">${row['22-45 days'].toLocaleString()}</td>`;
-                html += `<td class="aging-cell aging-46-90">${row['46-90 days'].toLocaleString()}</td>`;
-                html += `<td class="aging-cell aging-90plus">${row['90+ days'].toLocaleString()}</td>`;
-                html += `<td style="font-weight: 600">${row.total.toLocaleString()}</td>`;
+                
+                // 0-21 days with bill count
+                html += `<td class="aging-cell aging-0-21">${row['0-21 days'].toLocaleString()} (${billRow ? billRow['0-21 days'].size : 0})</td>`;
+                
+                // 22-45 days with bill count
+                html += `<td class="aging-cell aging-22-45">${row['22-45 days'].toLocaleString()} (${billRow ? billRow['22-45 days'].size : 0})</td>`;
+                
+                // 46-90 days with bill count
+                html += `<td class="aging-cell aging-46-90">${row['46-90 days'].toLocaleString()} (${billRow ? billRow['46-90 days'].size : 0})</td>`;
+                
+                // 90+ days with bill count
+                html += `<td class="aging-cell aging-90plus">${row['90+ days'].toLocaleString()} (${billRow ? billRow['90+ days'].size : 0})</td>`;
+                
+                // Total with bill count
+                html += `<td style="font-weight: 600">${row.total.toLocaleString()} (${billRow ? billRow.total.size : 0})</td>`;
                 html += '</tr>';
 
-                totals['0-21 days'] += row['0-21 days'];
-                totals['22-45 days'] += row['22-45 days'];
-                totals['46-90 days'] += row['46-90 days'];
-                totals['90+ days'] += row['90+ days'];
-                totals.total += row.total;
+                // Update totals
+                if (billRow) {
+                    totals['0-21 days'].bundles += row['0-21 days'];
+                    totals['0-21 days'].billCount += billRow['0-21 days'].size;
+                    
+                    totals['22-45 days'].bundles += row['22-45 days'];
+                    totals['22-45 days'].billCount += billRow['22-45 days'].size;
+                    
+                    totals['46-90 days'].bundles += row['46-90 days'];
+                    totals['46-90 days'].billCount += billRow['46-90 days'].size;
+                    
+                    totals['90+ days'].bundles += row['90+ days'];
+                    totals['90+ days'].billCount += billRow['90+ days'].size;
+                    
+                    totals.total.bundles += row.total;
+                    totals.total.billCount += billRow.total.size;
+                }
             });
 
+            // Total row
             html += '<tr class="total-row">';
             html += '<td>Total</td>';
-            html += `<td>${totals['0-21 days'].toLocaleString()}</td>`;
-            html += `<td>${totals['22-45 days'].toLocaleString()}</td>`;
-            html += `<td>${totals['46-90 days'].toLocaleString()}</td>`;
-            html += `<td>${totals['90+ days'].toLocaleString()}</td>`;
-            html += `<td>${totals.total.toLocaleString()}</td>`;
+            html += `<td>${totals['0-21 days'].bundles.toLocaleString()} (${totals['0-21 days'].billCount})</td>`;
+            html += `<td>${totals['22-45 days'].bundles.toLocaleString()} (${totals['22-45 days'].billCount})</td>`;
+            html += `<td>${totals['46-90 days'].bundles.toLocaleString()} (${totals['46-90 days'].billCount})</td>`;
+            html += `<td>${totals['90+ days'].bundles.toLocaleString()} (${totals['90+ days'].billCount})</td>`;
+            html += `<td>${totals.total.bundles.toLocaleString()} (${totals.total.billCount})</td>`;
             html += '</tr>';
 
             html += '</tbody></table></div>';
