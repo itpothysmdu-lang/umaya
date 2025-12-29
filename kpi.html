@@ -30,14 +30,14 @@
  .report-block th {
    background: #4a6fa5;
    color: white;
-   text-align: left;
+   text-align: center !important;
    padding: 10px;
  }
  
  .report-block td {
    padding: 8px 10px;
    border-bottom: 1px solid #eee;
-   text-align: left;
+   text-align: center !important;
  }
  
  .report-block tr:hover {
@@ -106,6 +106,32 @@
    font-size: 12px;
    margin-left: 10px;
    font-weight: normal;
+ }
+ 
+ /* Styles for percentage values */
+ .percentage {
+   font-size: 12px;
+   color: #666;
+   font-weight: normal;
+   display: block;
+   margin-top: 2px;
+ }
+ 
+ .positive {
+   color: #28a745;
+   font-weight: bold;
+ }
+ 
+ .negative {
+   color: #dc3545;
+   font-weight: bold;
+ }
+ 
+ .clearance-status {
+   font-size: 11px;
+   display: block;
+   margin-top: 2px;
+   font-weight: bold;
  }
 </style>
 </head>
@@ -203,7 +229,7 @@ document.getElementById('fromDate').value = today.toISOString().split('T')[0];
 document.getElementById('toDate').value = tomorrow.toISOString().split('T')[0];
 
 // ---------- helpers ----------
-const years = [2021, 2022, 2023, 2024, 2025];
+const years = [2021, 2022, 2023, 2024, 2025, 2026]; // Added 2026
 createRows("closingTable");
 createRows("openingTable");
 
@@ -268,15 +294,32 @@ function generateReport(){
   const totalClosingPcsVal = total(closing, 'pcsVal');
   const totalClosingMcmVal = total(closing, 'mcmVal');
   
-  // Stock Liquidation
-  const stockSoldPcs = totalOpeningPcsQty - totalClosingPcsQty;
-  const stockSoldMcm = totalOpeningMcmQty - totalClosingMcmQty;
-  const totalStockAvailable = totalOpeningPcsQty + totalOpeningMcmQty;
-  const totalStockSold = stockSoldPcs + stockSoldMcm;
-  
-  // Stock Liquidation Percentage
-  const stockLiquidationPercent = totalStockAvailable > 0 ? 
-    ((totalStockSold / totalStockAvailable) * 100).toFixed(2) : 0;
+  // Stock Liquidation for years 2021-2024 only
+  let stockSoldPcs2021to2024 = 0;
+  let stockSoldMcm2021to2024 = 0;
+  let totalOpeningStock2021to2024 = 0;
+
+  // Calculate only for years 2021-2024
+  years.forEach(year => {
+    if (year >= 2021 && year <= 2024) {
+      stockSoldPcs2021to2024 += (opening[year]?.pcsQty || 0) - (closing[year]?.pcsQty || 0);
+      stockSoldMcm2021to2024 += (opening[year]?.mcmQty || 0) - (closing[year]?.mcmQty || 0);
+      totalOpeningStock2021to2024 += (opening[year]?.pcsQty || 0) + (opening[year]?.mcmQty || 0);
+    }
+  });
+
+  const totalStockSold2021to2024 = stockSoldPcs2021to2024 + stockSoldMcm2021to2024;
+
+  // Stock Liquidation Percentage for 2021-2024 only
+  const stockLiquidationPercent2021to2024 = totalOpeningStock2021to2024 > 0 ? 
+    ((totalStockSold2021to2024 / totalOpeningStock2021to2024) * 100).toFixed(2) : 0;
+
+  // Use the 2021-2024 values for stock liquidation
+  const stockSoldPcs = stockSoldPcs2021to2024;
+  const stockSoldMcm = stockSoldMcm2021to2024;
+  const totalStockAvailable = totalOpeningStock2021to2024;
+  const totalStockSold = totalStockSold2021to2024;
+  const stockLiquidationPercent = stockLiquidationPercent2021to2024;
   
   // Aging analysis
   const currentYear = Math.max(...years);
@@ -301,20 +344,6 @@ function generateReport(){
       }
     }
   });
-  
-  // KPIs
-  const avgStockTurnover = totalStockAvailable > 0 ? 
-    (totalStockSold / totalStockAvailable).toFixed(2) : 0;
-  const stockCoverageDays = totalStockSold > 0 ? 
-    Math.round((totalStockAvailable / totalStockSold) * 30) : 0;
-  
-  // GP calculations
-  const gpPercentage = 20;
-  const totalOpeningValue = totalOpeningPcsVal + totalOpeningMcmVal;
-  const totalClosingValue = totalClosingPcsVal + totalClosingMcmVal;
-  const stockSoldValue = totalOpeningValue - totalClosingValue;
-  const potentialGP = (stockSoldValue * gpPercentage / 100).toFixed(2);
-  const agingGP = (agingStockValue * gpPercentage / 100).toFixed(2);
   
   // Format dates for display
   const fromDateFormatted = formatDate(fromDate);
@@ -369,20 +398,18 @@ function generateReport(){
         totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
         totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
         totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-        agingStockQty, agingStockValue, agingDetails, avgStockTurnover, 
-        stockCoverageDays, potentialGP, agingGP, fromDateFormatted, toDateFormatted);
+        agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted);
       break;
       
     case 'aging':
-      reportHTML += generateAgingReport(opening, closing, agingDetails, totalOpeningValue,
-        agingStockQty, agingStockValue, agingGP, fromDateFormatted, toDateFormatted);
+      reportHTML += generateAgingReport(opening, closing, agingDetails, 
+        agingStockQty, agingStockValue, fromDateFormatted, toDateFormatted);
       break;
       
     case 'liquidation':
       reportHTML += generateLiquidationReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty,
         totalClosingPcsQty, totalClosingMcmQty, stockSoldPcs, stockSoldMcm,
-        totalStockSold, stockLiquidationPercent, stockSoldValue, potentialGP,
-        fromDateFormatted, toDateFormatted);
+        totalStockSold, stockLiquidationPercent, fromDateFormatted, toDateFormatted);
       break;
       
     case 'detailed':
@@ -391,8 +418,7 @@ function generateReport(){
         totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
         totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
         totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-        agingStockQty, agingStockValue, agingDetails, avgStockTurnover, 
-        stockCoverageDays, potentialGP, agingGP, fromDateFormatted, toDateFormatted);
+        agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted);
       break;
   }
   
@@ -413,266 +439,13 @@ function generateSummaryReport(opening, closing, totalOpeningPcsQty, totalOpenin
   totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
   totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
   totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-  agingStockQty, agingStockValue, agingDetails, avgStockTurnover, 
-  stockCoverageDays, potentialGP, agingGP, fromDateFormatted, toDateFormatted) {
+  agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted) {
   
   const totalOpeningValue = totalOpeningPcsVal + totalOpeningMcmVal;
   const totalClosingValue = totalClosingPcsVal + totalClosingMcmVal;
-  const stockSoldValue = totalOpeningValue - totalClosingValue;
   
   return `
-    <h3>Executive Summary</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Key Metric</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Opening Stock</strong></td>
-          <td>${(totalOpeningPcsQty + totalOpeningMcmQty).toLocaleString()}</td>
-          <td>${totalOpeningValue.toLocaleString()}</td>
-          <td>As of ${fromDateFormatted}</td>
-        </tr>
-        <tr>
-          <td><strong>Closing Stock</strong></td>
-          <td>${(totalClosingPcsQty + totalClosingMcmQty).toLocaleString()}</td>
-          <td>${totalClosingValue.toLocaleString()}</td>
-          <td>As of ${toDateFormatted}</td>
-        </tr>
-        <tr class="highlight">
-          <td><strong>Stock Liquidation</strong></td>
-          <td>${totalStockSold.toLocaleString()}</td>
-          <td>${stockSoldValue.toLocaleString()}</td>
-          <td>${stockLiquidationPercent}% sold</td>
-        </tr>
-        <tr>
-          <td><strong>Aging Stock (>1 year)</strong></td>
-          <td>${agingStockQty.toLocaleString()}</td>
-          <td>${agingStockValue.toLocaleString()}</td>
-          <td>${agingDetails.length > 0 ? 'Requires attention' : 'No aging stock'}</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <h3>Key Performance Indicators</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>KPI</th>
-          <th>Value</th>
-          <th>Target</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Stock Turnover Ratio</td>
-          <td>${avgStockTurnover}</td>
-          <td>> 1.0</td>
-          <td>${avgStockTurnover > 1 ? '✅ Good' : '⚠️ Low'}</td>
-        </tr>
-        <tr>
-          <td>Stock Coverage (Days)</td>
-          <td>${stockCoverageDays} days</td>
-          <td>30-60 days</td>
-          <td>${stockCoverageDays >= 30 && stockCoverageDays <= 60 ? '✅ Optimal' : '⚠️ Review'}</td>
-        </tr>
-        <tr>
-          <td>Liquidation Percentage</td>
-          <td>${stockLiquidationPercent}%</td>
-          <td>> 50%</td>
-          <td>${stockLiquidationPercent > 50 ? '✅ Good' : '⚠️ Needs Improvement'}</td>
-        </tr>
-      </tbody>
-    </table>`;
-}
-
-// Generate Aging Report
-function generateAgingReport(opening, closing, agingDetails, totalOpeningValue,
-  agingStockQty, agingStockValue, agingGP, fromDateFormatted, toDateFormatted) {
-  
-  return `
-    <h3>Aging Stock Analysis (${fromDateFormatted} to ${toDateFormatted})</h3>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>Summary</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>% of Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Total Aging Stock (>1 year)</strong></td>
-          <td>${agingStockQty.toLocaleString()}</td>
-          <td>${agingStockValue.toLocaleString()}</td>
-          <td>${totalOpeningValue > 0 ? ((agingStockValue / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
-        </tr>
-        <tr>
-          <td><strong>Gross Profit Impact</strong></td>
-          <td colspan="2">Potential loss on aging stock</td>
-          <td>${agingGP}</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    ${agingDetails.length > 0 ? `
-    <h3>Aging Stock Details</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Year</th>
-          <th>Age (Years)</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>% of Total</th>
-          <th>Priority</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${agingDetails.map(item => `
-          <tr>
-            <td>${item.year}</td>
-            <td>${item.age}</td>
-            <td>${item.qty.toLocaleString()}</td>
-            <td>${item.value.toLocaleString()}</td>
-            <td>${totalOpeningValue > 0 ? ((item.value / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
-            <td>${item.age > 2 ? '🔴 High' : item.age > 1 ? '🟡 Medium' : '🟢 Low'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    
-    <h3>Action Recommendations</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Age Category</th>
-          <th>Action Required</th>
-          <th>Timeline</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>> 2 years</td>
-          <td>Immediate clearance sale, consider 40-50% discount</td>
-          <td>Within 30 days</td>
-        </tr>
-        <tr>
-          <td>1-2 years</td>
-          <td>Promotional bundling, 20-30% discount</td>
-          <td>Next 60 days</td>
-        </tr>
-      </tbody>
-    </table>
-    ` : '<p>No aging stock identified.</p>'}
-  `;
-}
-
-// Generate Liquidation Report
-function generateLiquidationReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty,
-  totalClosingPcsQty, totalClosingMcmQty, stockSoldPcs, stockSoldMcm,
-  totalStockSold, stockLiquidationPercent, stockSoldValue, potentialGP,
-  fromDateFormatted, toDateFormatted) {
-  
-  const totalOpeningQty = totalOpeningPcsQty + totalOpeningMcmQty;
-  const totalClosingQty = totalClosingPcsQty + totalClosingMcmQty;
-  
-  return `
-    <h3>Stock Liquidation Report (${fromDateFormatted} to ${toDateFormatted})</h3>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>Category</th>
-          <th>Opening</th>
-          <th>Closing</th>
-          <th>Sold</th>
-          <th>Liquidation %</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>PCS</strong></td>
-          <td>${totalOpeningPcsQty.toLocaleString()}</td>
-          <td>${totalClosingPcsQty.toLocaleString()}</td>
-          <td>${stockSoldPcs.toLocaleString()}</td>
-          <td>${totalOpeningPcsQty > 0 ? ((stockSoldPcs / totalOpeningPcsQty) * 100).toFixed(2) : 0}%</td>
-        </tr>
-        <tr>
-          <td><strong>MCM</strong></td>
-          <td>${totalOpeningMcmQty.toLocaleString()}</td>
-          <td>${totalClosingMcmQty.toLocaleString()}</td>
-          <td>${stockSoldMcm.toLocaleString()}</td>
-          <td>${totalOpeningMcmQty > 0 ? ((stockSoldMcm / totalOpeningMcmQty) * 100).toFixed(2) : 0}%</td>
-        </tr>
-        <tr class="highlight">
-          <td><strong>Total</strong></td>
-          <td>${totalOpeningQty.toLocaleString()}</td>
-          <td>${totalClosingQty.toLocaleString()}</td>
-          <td>${totalStockSold.toLocaleString()}</td>
-          <td>${stockLiquidationPercent}%</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <h3>Performance Analysis</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Performance Indicator</th>
-          <th>Value</th>
-          <th>Rating</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Overall Liquidation Rate</td>
-          <td>${stockLiquidationPercent}%</td>
-          <td>${stockLiquidationPercent > 60 ? 'Excellent' : stockLiquidationPercent > 40 ? 'Good' : 'Poor'}</td>
-        </tr>
-        <tr>
-          <td>Total Value Liquidated</td>
-          <td>${stockSoldValue.toLocaleString()}</td>
-          <td>${stockSoldValue > 10000 ? 'High' : stockSoldValue > 5000 ? 'Moderate' : 'Low'}</td>
-        </tr>
-        <tr>
-          <td>Gross Profit Realized</td>
-          <td>${potentialGP}</td>
-          <td>${parseFloat(potentialGP) > 2000 ? 'Excellent' : parseFloat(potentialGP) > 1000 ? 'Good' : 'Low'}</td>
-        </tr>
-        <tr>
-          <td>Efficiency Score</td>
-          <td>${calculateEfficiencyScore(stockLiquidationPercent, parseFloat(potentialGP))}</td>
-          <td>${calculateEfficiencyScore(stockLiquidationPercent, parseFloat(potentialGP)) > 80 ? 'High' : 
-                calculateEfficiencyScore(stockLiquidationPercent, parseFloat(potentialGP)) > 60 ? 'Medium' : 'Low'}</td>
-        </tr>
-      </tbody>
-    </table>
-  `;
-}
-
-// Generate Detailed Report
-function generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty, 
-  totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
-  totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
-  totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-  agingStockQty, agingStockValue, agingDetails, avgStockTurnover, 
-  stockCoverageDays, potentialGP, agingGP, fromDateFormatted, toDateFormatted) {
-  
-  const totalOpeningValue = totalOpeningPcsVal + totalOpeningMcmVal;
-  const totalClosingValue = totalClosingPcsVal + totalClosingMcmVal;
-  const stockSoldValue = totalOpeningValue - totalClosingValue;
-  
-  return `
-    <h3>Executive Summary</h3>
+    <h3>Executive Summary </h3>
     <table>
       <thead>
         <tr>
@@ -696,66 +469,171 @@ function generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeni
           <td>As of ${toDateFormatted}</td>
         </tr>
         <tr class="highlight">
-          <td><strong>Stock Liquidation</strong></td>
+          <td><strong>Stock Liquidation (2021-2024)</strong></td>
           <td>${totalStockSold.toLocaleString()}</td>
-          <td>${stockSoldValue.toLocaleString()}</td>
-          <td>${stockLiquidationPercent}% of available stock</td>
+          <td>${(totalOpeningValue - totalClosingValue).toLocaleString()}</td>
+          <td>${stockLiquidationPercent}% sold (2021-2024 only)</td>
+        </tr>
+        <tr>
+          <td><strong>Aging Stock (>1 year)</strong></td>
+          <td>${agingStockQty.toLocaleString()}</td>
+          <td>${agingStockValue.toLocaleString()}</td>
+          <td>${agingDetails.length > 0 ? 'Requires attention' : 'No aging stock'}</td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+// Generate Aging Report
+function generateAgingReport(opening, closing, agingDetails, 
+  agingStockQty, agingStockValue, fromDateFormatted, toDateFormatted) {
+  
+  const totalOpeningValue = total(opening, 'pcsVal') + total(opening, 'mcmVal');
+  
+  return `
+    <h3>Aging Stock Analysis (${fromDateFormatted} to ${toDateFormatted})</h3>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Summary</th>
+          <th>Quantity</th>
+          <th>Value</th>
+          <th>% of Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Total Aging Stock (>1 year)</strong></td>
+          <td>${agingStockQty.toLocaleString()}</td>
+          <td>${agingStockValue.toLocaleString()}</td>
+          <td>${totalOpeningValue > 0 ? ((agingStockValue / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    ${agingDetails.length > 0 ? `
+    <h3>Aging Stock Details</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Age (Years)</th>
+          <th>Quantity</th>
+          <th>Value</th>
+          <th>% of Total</th>
+          <th>Action Taken</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${agingDetails.map(item => `
+          <tr>
+            <td>${item.year}</td>
+            <td>${item.age}</td>
+            <td>${item.qty.toLocaleString()}</td>
+            <td>${item.value.toLocaleString()}</td>
+            <td>${totalOpeningValue > 0 ? ((item.value / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
+            <td>${item.age > 2 ? 'Urgent clearance initiated' : 'Regular monitoring in progress'}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    ` : '<p>No aging stock identified.</p>'}
+  `;
+}
+
+// Generate Liquidation Report
+function generateLiquidationReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty,
+  totalClosingPcsQty, totalClosingMcmQty, stockSoldPcs, stockSoldMcm,
+  totalStockSold, stockLiquidationPercent, fromDateFormatted, toDateFormatted) {
+  
+  const totalOpeningQty = totalOpeningPcsQty + totalOpeningMcmQty;
+  const totalClosingQty = totalClosingPcsQty + totalClosingMcmQty;
+  
+  return `
+    <h3>Stock Liquidation Report (2021-2024 only, ${fromDateFormatted} to ${toDateFormatted})</h3>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Opening</th>
+          <th>Closing</th>
+          <th>Sold</th>
+          <th>Liquidation %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>PCS (2021-2024)</strong></td>
+          <td>${totalOpeningPcsQty.toLocaleString()}</td>
+          <td>${totalClosingPcsQty.toLocaleString()}</td>
+          <td>${stockSoldPcs.toLocaleString()}</td>
+          <td>${totalOpeningPcsQty > 0 ? ((stockSoldPcs / totalOpeningPcsQty) * 100).toFixed(2) : 0}%</td>
+        </tr>
+        <tr>
+          <td><strong>MCM (2021-2024)</strong></td>
+          <td>${totalOpeningMcmQty.toLocaleString()}</td>
+          <td>${totalClosingMcmQty.toLocaleString()}</td>
+          <td>${stockSoldMcm.toLocaleString()}</td>
+          <td>${totalOpeningMcmQty > 0 ? ((stockSoldMcm / totalOpeningMcmQty) * 100).toFixed(2) : 0}%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>Total (2021-2024)</strong></td>
+          <td>${totalOpeningQty.toLocaleString()}</td>
+          <td>${totalClosingQty.toLocaleString()}</td>
+          <td>${totalStockSold.toLocaleString()}</td>
+          <td>${stockLiquidationPercent}%</td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+// Generate Detailed Report - FIXED VERSION
+function generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty, 
+  totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
+  totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
+  totalStockAvailable, totalStockSold, stockLiquidationPercent, 
+  agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted) {
+  
+  const totalOpeningValue = totalOpeningPcsVal + totalOpeningMcmVal;
+  const totalClosingValue = totalClosingPcsVal + totalClosingMcmVal;
+  
+  return `
+    <h3>Executive Summary </h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Key Metric</th>
+          <th>Quantity</th>
+          <th>Value</th>
+          <th>Analysis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Opening Stock</strong></td>
+          <td>${(totalOpeningPcsQty + totalOpeningMcmQty).toLocaleString()}</td>
+          <td>${totalOpeningValue.toLocaleString()}</td>
+          <td>As of ${fromDateFormatted}</td>
+        </tr>
+        <tr>
+          <td><strong>Closing Stock</strong></td>
+          <td>${(totalClosingPcsQty + totalClosingMcmQty).toLocaleString()}</td>
+          <td>${totalClosingValue.toLocaleString()}</td>
+          <td>As of ${toDateFormatted}</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>Stock Liquidation (2021-2024)</strong></td>
+          <td>${totalStockSold.toLocaleString()}</td>
+          <td>${(totalOpeningValue - totalClosingValue).toLocaleString()}</td>
+          <td>${stockLiquidationPercent}% of available stock (2021-2024)</td>
         </tr>
         <tr>
           <td><strong>Aging Stock (>1 year)</strong></td>
           <td>${agingStockQty.toLocaleString()}</td>
           <td>${agingStockValue.toLocaleString()}</td>
           <td>${agingDetails.length} year${agingDetails.length !== 1 ? 's' : ''} aged</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    <h3>Performance Indicators</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>KPI</th>
-          <th>Value</th>
-          <th>Target</th>
-          <th>Status</th>
-          <th>Recommendation</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Stock Turnover Ratio</td>
-          <td>${avgStockTurnover}</td>
-          <td>> 1.0</td>
-          <td>${avgStockTurnover > 1 ? '✅ Good' : '⚠️ Low'}</td>
-          <td>${avgStockTurnover > 1 ? 'Maintain current level' : 'Increase sales velocity'}</td>
-        </tr>
-        <tr>
-          <td>Stock Coverage (Days)</td>
-          <td>${stockCoverageDays} days</td>
-          <td>30-60 days</td>
-          <td>${stockCoverageDays >= 30 && stockCoverageDays <= 60 ? '✅ Optimal' : '⚠️ Review'}</td>
-          <td>${stockCoverageDays > 60 ? 'Reduce inventory levels' : stockCoverageDays < 30 ? 'Increase safety stock' : 'Optimal level'}</td>
-        </tr>
-        <tr>
-          <td>Liquidation Percentage</td>
-          <td>${stockLiquidationPercent}%</td>
-          <td>> 50%</td>
-          <td>${stockLiquidationPercent > 50 ? '✅ Good' : '⚠️ Needs Improvement'}</td>
-          <td>${stockLiquidationPercent > 50 ? 'Good movement' : 'Focus on promotions'}</td>
-        </tr>
-        <tr>
-          <td>Gross Profit Potential</td>
-          <td>${potentialGP}</td>
-          <td>-</td>
-          <td>✅ Realized</td>
-          <td>Based on 20% margin</td>
-        </tr>
-        <tr>
-          <td>Aging Stock Impact</td>
-          <td>${agingGP}</td>
-          <td>Minimize</td>
-          <td>⚠️ Opportunity Loss</td>
-          <td>Consider clearance sale</td>
         </tr>
       </tbody>
     </table>
@@ -770,7 +648,7 @@ function generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeni
           <th>Quantity</th>
           <th>Value</th>
           <th>% of Total</th>
-          <th>Action Required</th>
+          <th>Action Taken</th>
         </tr>
       </thead>
       <tbody>
@@ -781,7 +659,7 @@ function generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeni
             <td>${item.qty.toLocaleString()}</td>
             <td>${item.value.toLocaleString()}</td>
             <td>${totalOpeningValue > 0 ? ((item.value / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
-            <td>${item.age > 2 ? 'Urgent: Clearance needed' : 'Monitor closely'}</td>
+            <td>${item.age > 2 ? 'Urgent clearance initiated' : 'Regular monitoring in progress'}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -792,49 +670,115 @@ function generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeni
     <table>
       <thead>
         <tr>
-          <th>Year</th>
+          <th rowspan="2">Year</th>
           <th colspan="2">Opening Stock</th>
           <th colspan="2">Closing Stock</th>
-          <th colspan="2">Movement</th>
+          <th colspan="2">Stock Clearance %</th>
         </tr>
         <tr>
-          <th></th>
-          <th>Qty</th><th>Value</th>
-          <th>Qty</th><th>Value</th>
-          <th>Qty</th><th>Value</th>
+          <th>Qty</th>
+          <th>Value</th>
+          <th>Qty</th>
+          <th>Value</th>
+          <th>Qty</th>
+          <th>Value</th>
         </tr>
       </thead>
       <tbody>
-        ${years.map(year => {
-          const opQty = (opening[year]?.pcsQty || 0) + (opening[year]?.mcmQty || 0);
-          const opVal = (opening[year]?.pcsVal || 0) + (opening[year]?.mcmVal || 0);
-          const clQty = (closing[year]?.pcsQty || 0) + (closing[year]?.mcmQty || 0);
-          const clVal = (closing[year]?.pcsVal || 0) + (closing[year]?.mcmVal || 0);
-          const mvQty = opQty - clQty;
-          const mvVal = opVal - clVal;
+        ${(() => {
+          let totalOpQty = 0;
+          let totalOpVal = 0;
+          let totalClQty = 0;
+          let totalClVal = 0;
+          let clearanceQtySum = 0;
+          let clearanceValSum = 0;
+          let clearanceQtyCount = 0;
+          let clearanceValCount = 0;
           
-          return `
-            <tr>
-              <td>${year}</td>
-              <td>${opQty.toLocaleString()}</td>
-              <td>${opVal.toLocaleString()}</td>
-              <td>${clQty.toLocaleString()}</td>
-              <td>${clVal.toLocaleString()}</td>
-              <td>${mvQty.toLocaleString()}</td>
-              <td>${mvVal.toLocaleString()}</td>
+          // Helper function to determine clearance status
+          const getClearanceStatus = (value) => {
+            const numValue = parseFloat(value);
+            if (numValue > 20) return '<span style="color:#28a745;"></span>';
+            else if (numValue > 10) return '<span style="color:#ffc107;"></span>';
+            else if (numValue > 0) return '<span style="color:#fd7e14;"></span>';
+            else if (numValue < 0) return '<span style="color:#dc3545;"></span>';
+            else return '<span style="color:#6c757d;"></span>';
+          };
+          
+          const yearRows = years.map(year => {
+            const opQty = (opening[year]?.pcsQty || 0) + (opening[year]?.mcmQty || 0);
+            const opVal = (opening[year]?.pcsVal || 0) + (opening[year]?.mcmVal || 0);
+            const clQty = (closing[year]?.pcsQty || 0) + (closing[year]?.mcmQty || 0);
+            const clVal = (closing[year]?.pcsVal || 0) + (closing[year]?.mcmVal || 0);
+            
+            // CORRECTED FORMULA: Stock Clearance % = ((Closing - Opening) / Opening) * 100
+            const clearanceQty = opQty > 0 ? (((clQty - opQty) / opQty) * 100).toFixed(2) : '0.00';
+            const clearanceVal = opVal > 0 ? (((clVal - opVal) / opVal) * 100).toFixed(2) : '0.00';
+            
+            // Accumulate totals
+            totalOpQty += opQty;
+            totalOpVal += opVal;
+            totalClQty += clQty;
+            totalClVal += clVal;
+            
+            // Only add to clearance totals if we have valid percentages
+            if (opQty > 0) {
+              clearanceQtySum += Math.abs(parseFloat(clearanceQty));
+              clearanceQtyCount++;
+            }
+            
+            if (opVal > 0) {
+              clearanceValSum += Math.abs(parseFloat(clearanceVal));
+              clearanceValCount++;
+            }
+            
+            return `
+              <tr>
+                <td>${year}</td>
+                <td>${opQty.toLocaleString()}</td>
+                <td>${opVal.toLocaleString()}</td>
+                <td>${clQty.toLocaleString()}</td>
+                <td>${clVal.toLocaleString()}</td>
+                <td>
+                  ${clearanceQty}%
+                  <span class="clearance-status">${getClearanceStatus(clearanceQty)}</span>
+                </td>
+                <td>
+                  ${clearanceVal}%
+                  <span class="clearance-status">${getClearanceStatus(clearanceVal)}</span>
+                </td>
+              </tr>
+            `;
+          }).join('');
+          
+          // Calculate average clearance percentages
+          const avgClearanceQty = clearanceQtyCount > 0 ? (clearanceQtySum / clearanceQtyCount).toFixed(2) : '0.00';
+          const avgClearanceVal = clearanceValCount > 0 ? (clearanceValSum / clearanceValCount).toFixed(2) : '0.00';
+          
+          // Add totals row
+          return yearRows + `
+            <tr class="totals" style="background:#f3f3f3; font-weight:bold;">
+              <td>Total/Avg</td>
+              <td>${totalOpQty.toLocaleString()}</td>
+              <td>${totalOpVal.toLocaleString()}</td>
+              <td>${totalClQty.toLocaleString()}</td>
+              <td>${totalClVal.toLocaleString()}</td>
+              <td>
+                ${avgClearanceQty}%
+                <span class="clearance-status">${getClearanceStatus(avgClearanceQty)}</span>
+              </td>
+              <td>
+                ${avgClearanceVal}%
+                <span class="clearance-status">${getClearanceStatus(avgClearanceVal)}</span>
+              </td>
             </tr>
           `;
-        }).join('')}
+        })()}
       </tbody>
     </table>
+    
+    
   `;
-}
-
-function calculateEfficiencyScore(liquidationPercent, grossProfit) {
-  let score = 0;
-  score += Math.min(60, liquidationPercent * 0.6);
-  score += Math.min(40, grossProfit / 100);
-  return Math.min(100, Math.round(score));
 }
 
 function formatDate(dateString) {
