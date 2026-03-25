@@ -1,924 +1,642 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Stock Position Report</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pothys IT Management — Madurai Branch</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
- body { font-family: Arial, sans-serif; margin: 20px; }
- h2 { margin-top: 32px; }
- table { border-collapse: collapse; width: 100%; margin-top: 12px; }
- th, td { border: 1px solid #ccc; padding: 6px; text-align: right; }
- th { background:#f3f3f3; text-align:center; }
- .totals { font-weight:bold; background:#eef; }
- .section { border:1px solid #ddd; padding:16px; border-radius:10px; margin-top:18px;}
- label { display:block; margin:6px 0 3px; }
- input, select { padding:6px; width:100%; box-sizing:border-box; }
- .grid { display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
- button { padding:10px 18px; margin-top:18px; cursor:pointer;}
- .report-block { background:#fafafa; padding:14px; border-radius:10px; margin-top:12px;}
- .highlight { color:#b30000; font-weight:bold;}
- 
- /* Additional styles for report table */
- .report-block table {
-   width: 100%;
-   margin-top: 15px;
-   background: white;
- }
- 
- .report-block th {
-   background: #4a6fa5;
-   color: white;
-   text-align: center !important;
-   padding: 10px;
- }
- 
- .report-block td {
-   padding: 8px 10px;
-   border-bottom: 1px solid #eee;
-   text-align: center !important;
- }
- 
- .report-block tr:hover {
-   background: #f9f9f9;
- }
- 
- .copy-btn {
-   background: #28a745;
-   color: white;
-   border: none;
-   padding: 10px 20px;
-   border-radius: 5px;
-   cursor: pointer;
-   margin-top: 15px;
-   font-size: 14px;
-   margin-right: 10px;
- }
- 
- .copy-btn:hover {
-   background: #218838;
- }
- 
- .header-info {
-   background: #f0f7ff;
-   padding: 15px;
-   border-radius: 8px;
-   margin-bottom: 20px;
-   border-left: 4px solid #4a6fa5;
- }
- 
- .header-info-grid {
-   display: grid;
-   grid-template-columns: repeat(4, 1fr);
-   gap: 20px;
- }
- 
- .header-info-item {
-   margin-bottom: 10px;
- }
- 
- .header-info-label {
-   font-weight: bold;
-   color: #555;
-   font-size: 14px;
- }
- 
- .header-info-value {
-   font-size: 16px;
-   color: #333;
-   margin-top: 5px;
- }
- 
- .button-container {
-   display: flex;
-   flex-wrap: wrap;
-   gap: 10px;
-   margin-top: 20px;
- }
- 
- .report-type-badge {
-   display: inline-block;
-   padding: 4px 12px;
-   background: #4a6fa5;
-   color: white;
-   border-radius: 20px;
-   font-size: 12px;
-   margin-left: 10px;
-   font-weight: normal;
- }
- 
- /* Styles for percentage values */
- .percentage {
-   font-size: 12px;
-   color: #666;
-   font-weight: normal;
-   display: block;
-   margin-top: 2px;
- }
- 
- .positive {
-   color: #28a745;
-   font-weight: bold;
- }
- 
- .negative {
-   color: #dc3545;
-   font-weight: bold;
- }
- 
- .clearance-status {
-   font-size: 11px;
-   display: block;
-   margin-top: 2px;
-   font-weight: bold;
- }
+:root{--bg:#0a0c14;--surface:#111520;--surface2:#161b2e;--border:#1e2640;--border2:#252d4a;--accent:#e8a020;--accent2:#f4c060;--accent-dim:rgba(232,160,32,0.12);--accent-glow:rgba(232,160,32,0.25);--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.1);--green:#3ecf8e;--green-dim:rgba(62,207,142,0.1);--red:#f87171;--purple:#a78bfa;--text:#e8eaf0;--text2:#8890aa;--text3:#5a6380;--radius:12px;--radius2:8px;--font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'JetBrains Mono',monospace;--shadow:0 4px 24px rgba(0,0,0,0.5)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;min-height:100vh;overflow-x:hidden}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#0a0c14;font-family:var(--font-head);box-shadow:0 0 20px var(--accent-glow)}
+.logo-text .brand{font-family:var(--font-head);font-size:15px;font-weight:700}
+.logo-text .sub{font-size:11px;color:var(--text3)}
+.logo-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:var(--font-mono);cursor:pointer;margin-top:6px;border:1px solid;transition:all .2s}
+.badge-ok{background:var(--green-dim);color:var(--green);border-color:rgba(62,207,142,0.3)}
+.badge-warn{background:var(--accent-dim);color:var(--accent);border-color:rgba(232,160,32,0.3)}
+.badge-err{background:rgba(248,113,113,0.1);color:var(--red);border-color:rgba(248,113,113,0.3)}
+.sidebar-nav{flex:1;overflow-y:auto;padding:16px 10px}
+.nav-section{margin-bottom:20px}
+.nav-label{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;padding:0 10px;margin-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius2);cursor:pointer;transition:all .2s;color:var(--text2);font-size:13.5px;margin-bottom:2px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(232,160,32,0.2)}
+.nav-item .icon{font-size:15px;width:20px;text-align:center}
+.n-badge{margin-left:auto;background:var(--accent);color:#0a0c14;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;font-family:var(--font-mono)}
+.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+.main{margin-left:240px;min-height:100vh}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(10,12,20,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:14px}
+.topbar-title{font-family:var(--font-head);font-size:18px;font-weight:700;flex:1}
+.topbar-title span{color:var(--accent)}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--radius2);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:var(--font-body)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--text3)}
+.btn-primary{background:var(--accent);color:#0a0c14;font-weight:600;box-shadow:0 0 16px var(--accent-glow)}
+.btn-primary:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px)}
+.btn-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,158,255,0.25)}
+.btn-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.25)}
+.btn-red{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2);font-size:12px;padding:5px 10px}
+.btn-sm{padding:5px 10px;font-size:12px}
+.page{display:none;padding:28px}
+.page.active{display:block;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
+.page-title{font-family:var(--font-head);font-size:22px;font-weight:800}
+.page-title span{color:var(--accent)}
+.page-sub{font-size:13px;color:var(--text3);margin-top:4px}
+.row{display:flex;align-items:center;gap:10px}
+.ml-auto{margin-left:auto}
+/* dash */
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:all .25s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.gold::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.stat-card.blue::before{background:linear-gradient(90deg,var(--blue),#7ec8ff)}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),#7fffcb)}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),#c4b5fd)}
+.stat-icon{font-size:22px;margin-bottom:12px}
+.stat-val{font-family:var(--font-head);font-size:32px;font-weight:800;line-height:1;margin-bottom:4px}
+.stat-label{color:var(--text2);font-size:12.5px}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:8px;font-family:var(--font-mono)}
+.stat-card.gold .stat-val{color:var(--accent2)}
+.stat-card.blue .stat-val{color:var(--blue)}
+.stat-card.green .stat-val{color:var(--green)}
+.stat-card.purple .stat-val{color:var(--purple)}
+.inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.inv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;align-items:center;gap:14px;transition:all .2s}
+.inv-card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.inv-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.inv-info{flex:1}
+.inv-name{font-weight:500;font-size:13px;color:var(--text);margin-bottom:3px}
+.inv-count{font-family:var(--font-head);font-size:24px;font-weight:700;line-height:1}
+/* form */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
+.form-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.form-header-icon{width:36px;height:36px;border-radius:8px;background:var(--accent-dim);border:1px solid rgba(232,160,32,0.2);display:flex;align-items:center;justify-content:center;font-size:16px}
+.form-header-title{font-family:var(--font-head);font-size:15px;font-weight:700}
+.form-header-sub{font-size:12px;color:var(--text3)}
+.form-body{padding:24px}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.field{display:flex;flex-direction:column;gap:6px}
+label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;color:var(--text);font-family:var(--font-body);font-size:13.5px;outline:none;transition:all .2s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+input::placeholder{color:var(--text3)}
+select option{background:var(--surface2)}
+.sect{grid-column:1/-1;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:8px;margin-top:4px}
+.sect::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,160,32,0.3),transparent)}
+.form-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.15)}
+/* table */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:8px 14px;flex:1}
+.search-box input{background:none;border:none;padding:0;font-size:13px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(0,0,0,.2)}
+th{padding:11px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-p{color:var(--text);font-weight:500}
+.td-m{font-family:var(--font-mono);font-size:12px;color:var(--blue)}
+.table-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text3);background:rgba(0,0,0,.1)}
+/* config */
+.config-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px}
+.config-title{font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.conn-box{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius2);margin-top:14px;font-size:13px;border:1px solid}
+.conn-ok{background:var(--green-dim);border-color:rgba(62,207,142,.25);color:var(--green)}
+.conn-err{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25);color:var(--red)}
+.conn-idle{background:var(--surface2);border-color:var(--border2);color:var(--text3)}
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border-radius:var(--radius);padding:14px 20px;min-width:300px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow);transform:translateX(120%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:999;border:1px solid var(--border2)}
+.toast.show{transform:translateX(0)}
+.t-icon{font-size:18px;margin-top:1px}
+.t-title{font-weight:600;font-size:13px}
+.t-sub{font-size:11.5px;color:var(--text3);margin-top:2px}
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(10,12,20,.8);backdrop-filter:blur(4px);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.overlay.show{display:flex}
+.spinner{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.overlay-msg{color:var(--text2);font-size:13px;font-family:var(--font-mono)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
 </style>
 </head>
-
 <body>
-<h1>STOCK POSITION REPORT</h1>
 
-<div class="section">
-  <h3>Report Filters & Parameters</h3>
-  <div class="grid">
-    <div>
-      <label>From Date *</label>
-      <input type="date" id="fromDate" required>
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div class="overlay-msg" id="overlay-msg">Saving to Google Sheets…</div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">P</div>
+      <div class="logo-text"><div class="brand">Pothys IT</div><div class="sub">Madurai Branch</div></div>
     </div>
-    <div>
-      <label>To Date *</label>
-      <input type="date" id="toDate" required>
-    </div>
-    <div>
-      <label>Purchaser Name</label>
-      <input type="text" id="purchaser" placeholder="Enter purchaser name">
-    </div>
-    <div>
-      <label>Location</label>
-      <input type="text" id="location" placeholder="Enter location">
+    <div class="logo-badge badge-warn" id="conn-badge" onclick="showPage('settings',null)">
+      <span id="conn-dot">🟡</span><span id="conn-label">Configure Sheet</span>
     </div>
   </div>
-  <div style="margin-top: 20px;">
-    <label>Report Type</label>
-    <select id="reportType">
-      <option value="detailed">Detailed Report</option>
-      <option value="summary">Summary Report</option>
-      <option value="aging">Aging Analysis</option>
-      <option value="liquidation">Liquidation Report</option>
-    </select>
+  <div class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span>Dashboard</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Management</div>
+      <div class="nav-item" onclick="showPage('input',this)"><span class="icon">➕</span>Add / Update Entry<span class="n-badge">NEW</span></div>
+      <div class="nav-item" onclick="showPage('records',this)"><span class="icon">📋</span>All Records</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Reports</div>
+      <div class="nav-item" onclick="showPage('report',this)"><span class="icon">📈</span>Summary Report</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Setup</div>
+      <div class="nav-item" onclick="showPage('settings',this)"><span class="icon">⚙️</span>Sheet Settings</div>
+    </div>
   </div>
+  <div class="sidebar-footer">IT Management System v2.0<br><span style="color:var(--accent)">Pothys Retail Pvt Ltd</span></div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title">IT Asset & Support <span>Management</span></div>
+    <div class="row">
+      <button class="btn btn-ghost btn-sm" onclick="syncDashboard()">🔄 Sync</button>
+      <button class="btn btn-primary" onclick="showPage('input',null)">+ New Entry</button>
+    </div>
+  </div>
+
+  <!-- ══ DASHBOARD ══ -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-header">
+      <div><div class="page-title">IT Asset <span>Dashboard</span></div><div class="page-sub">Live from Google Sheets — Pothys Retail, Madurai Branch</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="syncDashboard()">↻ Refresh Data</button>
+    </div>
+    <div class="dash-grid">
+      <div class="stat-card gold"><div class="stat-icon">👥</div><div class="stat-val" id="s-users">—</div><div class="stat-label">Total Users</div><div class="stat-sub">User sheet</div></div>
+      <div class="stat-card blue"><div class="stat-icon">🖥️</div><div class="stat-val" id="s-sys">—</div><div class="stat-label">Total Systems</div><div class="stat-sub">Win + Linux + Server</div></div>
+      <div class="stat-card green"><div class="stat-icon">🖨️</div><div class="stat-val" id="s-prn">—</div><div class="stat-label">Total Printers</div><div class="stat-sub">All printer types</div></div>
+      <div class="stat-card purple"><div class="stat-icon">🌐</div><div class="stat-val" id="s-net">—</div><div class="stat-label">Network Devices</div><div class="stat-sub">Switch + Router</div></div>
+    </div>
+    <div class="inv-grid" id="inv-grid"></div>
+  </div>
+
+  <!-- ══ INPUT FORM ══ -->
+  <div class="page" id="page-input">
+    <div class="page-header">
+      <div><div class="page-title">Add / Update <span>Entry</span></div><div class="page-sub">All filled sections save to their respective Google Sheet tabs automatically</div></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-header"><div class="form-header-icon">👤</div><div><div class="form-header-title">User & Location</div><div class="form-header-sub">→ Sheets: User · Division · Location No's</div></div></div>
+      <div class="form-body"><div class="form-grid">
+        <div class="field"><label>Employee / User Name *</label><input type="text" id="f_user" placeholder="e.g. Ramesh Kumar"/></div>
+        <div class="field"><label>Employee ID</label><input type="text" id="f_empid" placeholder="e.g. PTH-2024-001"/></div>
+        <div class="field"><label>Division *</label><select id="f_division"><option value="">— Select Division —</option><option>Retail Floor</option><option>Billing &amp; Accounts</option><option>Warehouse &amp; Logistics</option><option>HR &amp; Admin</option><option>IT Department</option><option>Management</option><option>Security</option><option>Maintenance</option></select></div>
+        <div class="field"><label>Location No</label><input type="text" id="f_location" placeholder="e.g. FL-001"/></div>
+        <div class="field"><label>Floor / Zone</label><select id="f_floor"><option value="">— Select —</option><option>Ground Floor</option><option>First Floor</option><option>Second Floor</option><option>Third Floor</option><option>Basement</option><option>Server Room</option></select></div>
+        <div class="field"><label>Contact / Extension</label><input type="text" id="f_contact" placeholder="+91 9XXXXXXXXX"/></div>
+      </div></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-header"><div class="form-header-icon">🖥️</div><div><div class="form-header-title">System Details</div><div class="form-header-sub">→ Sheets: Linux System No's · Windows System OS · Server OS System</div></div></div>
+      <div class="form-body"><div class="form-grid">
+        <div class="sect">🐧 Linux</div>
+        <div class="field"><label>Linux System No</label><input type="text" id="f_linux_no" placeholder="LX-001"/></div>
+        <div class="field"><label>Distro</label><select id="f_linux_os"><option value="">— Select —</option><option>Ubuntu 22.04 LTS</option><option>Ubuntu 20.04 LTS</option><option>CentOS 7</option><option>Debian 12</option><option>Red Hat Enterprise</option></select></div>
+        <div class="field"><label>Asset Tag</label><input type="text" id="f_linux_tag" placeholder="PTH-LX-0042"/></div>
+        <div class="sect">🪟 Windows</div>
+        <div class="field"><label>Windows System No</label><input type="text" id="f_win_no" placeholder="WN-001"/></div>
+        <div class="field"><label>Windows OS</label><select id="f_win_os"><option value="">— Select —</option><option>Windows 11 Pro</option><option>Windows 11 Home</option><option>Windows 10 Pro</option><option>Windows 10 LTSC</option><option>Windows 7 (Legacy)</option></select></div>
+        <div class="field"><label>Asset Tag</label><input type="text" id="f_win_tag" placeholder="PTH-WN-0101"/></div>
+        <div class="sect">🗄️ Server</div>
+        <div class="field"><label>Server No</label><input type="text" id="f_srv_no" placeholder="SRV-001"/></div>
+        <div class="field"><label>Server OS</label><select id="f_srv_os"><option value="">— Select —</option><option>Windows Server 2022</option><option>Windows Server 2019</option><option>Ubuntu Server 22.04</option><option>CentOS Stream 9</option><option>VMware ESXi</option></select></div>
+        <div class="field"><label>Server Role</label><select id="f_srv_role"><option value="">— Select —</option><option>Domain Controller</option><option>File Server</option><option>Database Server</option><option>Web / App Server</option><option>Backup Server</option></select></div>
+      </div></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-header"><div class="form-header-icon">🖨️</div><div><div class="form-header-title">Printers &amp; Scanners</div><div class="form-header-sub">→ Sheets: Thermal · Barcode · Ink · Cheque · Doc Scanner · Xerox · Mobile Scanner</div></div></div>
+      <div class="form-body"><div class="form-grid">
+        <div class="sect">🧾 Thermal Printers</div>
+        <div class="field"><label>Printer No</label><input type="text" id="f_tp_no" placeholder="TP-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_tp_model" placeholder="Epson TM-T82"/></div>
+        <div class="field"><label>Status</label><select id="f_tp_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
+        <div class="sect">📦 Barcode Printers</div>
+        <div class="field"><label>Printer No</label><input type="text" id="f_bc_no" placeholder="BC-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_bc_model" placeholder="Zebra ZT230"/></div>
+        <div class="field"><label>Status</label><select id="f_bc_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
+        <div class="sect">💧 Ink Printers</div>
+        <div class="field"><label>Printer No</label><input type="text" id="f_ip_no" placeholder="IP-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_ip_model" placeholder="HP DeskJet 2723"/></div>
+        <div class="field"><label>Status</label><select id="f_ip_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
+        <div class="sect">💳 Cheque Printers</div>
+        <div class="field"><label>Printer No</label><input type="text" id="f_cp_no" placeholder="CP-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_cp_model" placeholder="TVSE MSP 250"/></div>
+        <div class="field"><label>Status</label><select id="f_cp_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
+        <div class="sect">📄 Doc Scanners</div>
+        <div class="field"><label>Scanner No</label><input type="text" id="f_ds_no" placeholder="DS-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_ds_model" placeholder="Epson DS-530"/></div>
+        <div class="field"><label>Type</label><select id="f_ds_type"><option>Flatbed</option><option>ADF</option><option>Sheet-fed</option></select></div>
+        <div class="sect">📠 Xerox / MFP</div>
+        <div class="field"><label>Machine No</label><input type="text" id="f_xm_no" placeholder="XM-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_xm_model" placeholder="Xerox WC 3345"/></div>
+        <div class="field"><label>Status</label><select id="f_xm_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
+        <div class="sect">📱 Mobile Scanners</div>
+        <div class="field"><label>Scanner No</label><input type="text" id="f_ms_no" placeholder="MS-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_ms_model" placeholder="Zebra TC21"/></div>
+        <div class="field"><label>Status</label><select id="f_ms_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
+      </div></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-header"><div class="form-header-icon">🌐</div><div><div class="form-header-title">Network &amp; Internet</div><div class="form-header-sub">→ Sheets: Switch · Router · Internet Provider</div></div></div>
+      <div class="form-body"><div class="form-grid">
+        <div class="sect">🔀 Switches</div>
+        <div class="field"><label>Switch No</label><input type="text" id="f_sw_no" placeholder="SW-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_sw_model" placeholder="Cisco SG300-28"/></div>
+        <div class="field"><label>Ports</label><select id="f_sw_ports"><option>8 Port</option><option>16 Port</option><option>24 Port</option><option>48 Port</option></select></div>
+        <div class="sect">📡 Routers</div>
+        <div class="field"><label>Router No</label><input type="text" id="f_rt_no" placeholder="RT-001"/></div>
+        <div class="field"><label>Model</label><input type="text" id="f_rt_model" placeholder="TP-Link ER605"/></div>
+        <div class="field"><label>WAN IP</label><input type="text" id="f_rt_ip" placeholder="203.0.113.10"/></div>
+        <div class="sect">🌐 Internet Provider</div>
+        <div class="field"><label>ISP Name</label><select id="f_isp"><option value="">— Select ISP —</option><option>BSNL</option><option>Airtel</option><option>JioFiber</option><option>ACT Fibernet</option><option>Vodafone Idea</option><option>Tata Communications</option></select></div>
+        <div class="field"><label>Plan / Speed</label><input type="text" id="f_isp_plan" placeholder="100 Mbps Leased"/></div>
+        <div class="field"><label>Account / Circuit ID</label><input type="text" id="f_isp_id" placeholder="BSNL-MDU-00421"/></div>
+      </div></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-footer">
+        <div style="font-size:12px;color:var(--text3)">Entry: <span style="color:var(--text);font-family:var(--font-mono)" id="entry-date"></span></div>
+        <div class="ml-auto row">
+          <button class="btn btn-ghost" onclick="clearForm()">✕ Clear</button>
+          <button class="btn btn-primary" id="save-btn" onclick="submitForm()">📗 Save to Google Sheets</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RECORDS ══ -->
+  <div class="page" id="page-records">
+    <div class="page-header">
+      <div><div class="page-title">All <span>Records</span></div><div class="page-sub">Live from Google Sheets — choose sheet tab below</div></div>
+      <div class="row">
+        <select id="rec-sheet-sel" onchange="loadRecords()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius2);padding:8px 14px;color:var(--text);font-size:13px">
+          <option value="USER">User</option><option value="WINDOWS">Windows Systems</option><option value="LINUX">Linux Systems</option>
+          <option value="SERVER">Servers</option><option value="THERMAL">Thermal Printers</option><option value="BARCODE">Barcode Printers</option>
+          <option value="INK">Ink Printers</option><option value="CHEQUE">Cheque Printers</option><option value="DOC_SCANNER">Doc Scanners</option>
+          <option value="XEROX">Xerox Machines</option><option value="MOBILE_SCANNER">Mobile Scanners</option>
+          <option value="SWITCH">Switches</option><option value="ROUTER">Routers</option><option value="ISP">Internet Providers</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="loadRecords()">🔄 Refresh</button>
+      </div>
+    </div>
+    <div class="table-card">
+      <div class="table-header">
+        <div class="search-box"><span>🔍</span><input type="text" placeholder="Search records…" oninput="searchRecords(this.value)"/></div>
+        <span style="font-size:12px;color:var(--text3)" id="rec-count">—</span>
+      </div>
+      <div class="table-wrap"><table id="rec-table"><thead id="rec-thead"></thead><tbody id="rec-tbody"><tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3)">Select a sheet and click Refresh</td></tr></tbody></table></div>
+      <div class="table-footer"><span id="rec-footer">—</span></div>
+    </div>
+  </div>
+
+  <!-- ══ REPORT ══ -->
+  <div class="page" id="page-report">
+    <div class="page-header">
+      <div><div class="page-title">Summary <span>Report</span></div><div class="page-sub">Total record counts per sheet tab — live from Google Sheets</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="loadReport()">🔄 Refresh</button>
+    </div>
+    <div class="table-card">
+      <div class="table-header" style="font-family:var(--font-head);font-weight:700;font-size:15px">📊 Record Count by Sheet</div>
+      <div class="table-wrap">
+        <table><thead><tr><th>#</th><th>Key</th><th>Sheet Tab Name</th><th>Records</th></tr></thead>
+        <tbody id="report-body"><tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3)">Click Refresh to load</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SETTINGS ══ -->
+  <div class="page" id="page-settings">
+    <div class="page-header">
+      <div><div class="page-title">Google Sheets <span>Setup</span></div><div class="page-sub">Connect this app to your Google Sheet via Apps Script Web App</div></div>
+    </div>
+
+    <div class="config-panel">
+      <div class="config-title">📌 Step-by-Step Setup</div>
+      <ol style="color:var(--text2);font-size:13.5px;line-height:2.2;padding-left:20px">
+        <li>Open your <strong style="color:var(--text)">Google Sheet</strong> → <strong style="color:var(--text)">Extensions → Apps Script</strong></li>
+        <li>Delete any existing code. Paste the full <code style="color:var(--accent);background:var(--bg);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">Code.gs</code> provided</li>
+        <li>In the editor, select function <code style="color:var(--accent);background:var(--bg);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">setupAllSheets</code> → click <strong style="color:var(--green)">▶ Run</strong> (one time only — creates all 16 tabs)</li>
+        <li>Click <strong style="color:var(--text)">Deploy → New Deployment</strong></li>
+        <li>Type: <strong style="color:var(--green)">Web App</strong> | Execute as: <strong style="color:var(--green)">Me</strong> | Access: <strong style="color:var(--green)">Anyone</strong></li>
+        <li>Click <strong style="color:var(--text)">Deploy</strong> → copy the <strong style="color:var(--accent)">Web App URL</strong></li>
+        <li>Paste the URL below and click <strong style="color:var(--green)">Test Connection</strong>, then <strong style="color:var(--green)">Save &amp; Connect</strong></li>
+      </ol>
+    </div>
+
+    <div class="config-panel">
+      <div class="config-title">🔗 Apps Script Web App URL</div>
+      <div class="field">
+        <label>Web App URL (from Deploy step)</label>
+        <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/AKfyc.../exec"/>
+      </div>
+      <div class="conn-box conn-idle" id="conn-box">
+        <span>⬤</span><span id="conn-msg">Not tested yet — enter URL above and click Test Connection.</span>
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn btn-blue" onclick="testConnection()">🔌 Test Connection</button>
+        <button class="btn btn-primary" onclick="saveSettings()">💾 Save &amp; Connect</button>
+      </div>
+    </div>
+
+    <div class="config-panel">
+      <div class="config-title">📋 All 16 Sheet Tabs (auto-created by setupAllSheets)</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 User</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Division</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Location No's</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Linux System No's</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Windows System OS</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Server OS System</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Thermal Printers</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Barcode Printer No's</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Ink Printer</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Cheque Printer</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Doc Scanner</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Xerox Machine</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Mobile Scanner</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Switch</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Router</div>
+        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Internet Provider</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="t-icon" id="t-icon">✅</div>
+  <div><div class="t-title" id="t-title"></div><div class="t-sub" id="t-sub"></div></div>
 </div>
-
-<!-- Opening Stock -->
-<div class="section">
-  <h3>Opening Stock (As of From Date)</h3>
-  <table id="openingTable">
-    <thead>
-      <tr>
-        <th>Year</th>
-        <th>PCS Qty</th><th>PCS Value</th>
-        <th>MCM Qty</th><th>MCM Value</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr class="totals">
-        <td>Total</td>
-        <td id="opPcsQtyTot">0</td><td id="opPcsValTot">0</td>
-        <td id="opMcmQtyTot">0</td><td id="opMcmValTot">0</td>
-      </tr>
-    </tfoot>
-  </table>
-</div>
-
-<!-- Closing Stock -->
-<div class="section">
-  <h3>Closing Stock (As of To Date)</h3>
-  <table id="closingTable">
-    <thead>
-      <tr>
-        <th>Year</th>
-        <th>PCS Qty</th><th>PCS Value</th>
-        <th>MCM Qty</th><th>MCM Value</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr class="totals">
-        <td>Total</td>
-        <td id="clPcsQtyTot">0</td><td id="clPcsValTot">0</td>
-        <td id="clMcmQtyTot">0</td><td id="clMcmValTot">0</td>
-      </tr>
-    </tfoot>
-  </table>
-</div>
-
-<button onclick="generateReport()">Generate Report</button>
-
-<h2>Auto-Generated Management Report</h2>
-<div id="report"></div>
 
 <script>
-// Set default dates (today and tomorrow)
-const today = new Date();
-const tomorrow = new Date(today);
-tomorrow.setDate(tomorrow.getDate() + 1);
+// ══════════════════════════════
+//  GOOGLE APPS SCRIPT URL
+// ══════════════════════════════
+let GAS_URL = localStorage.getItem("pothys_gas_url") || "";
 
-document.getElementById('fromDate').value = today.toISOString().split('T')[0];
-document.getElementById('toDate').value = tomorrow.toISOString().split('T')[0];
+const SHEET_NAMES = {
+  USER:"User", DIVISION:"Division", LOCATION:"Location No's",
+  LINUX:"Linux System No's", WINDOWS:"Windows System OS", SERVER:"Server OS System",
+  THERMAL:"Thermal Printers", BARCODE:"Barcode Printer No's", INK:"Ink Printer",
+  CHEQUE:"Cheque Printer", DOC_SCANNER:"Doc Scanner", XEROX:"Xerox Machine",
+  MOBILE_SCANNER:"Mobile Scanner", SWITCH:"Switch", ROUTER:"Router", ISP:"Internet Provider"
+};
 
-// ---------- helpers ----------
-const years = [2021, 2022, 2023, 2024, 2025, 2026]; // Added 2026
-createRows("closingTable");
-createRows("openingTable");
-
-function createRows(tableId){
-  const tbody = document.querySelector(`#${tableId} tbody`);
-  years.forEach(y=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td style="text-align:center">${y}</td>
-      <td><input type="number" value="0" data-type="qty" data-group="pcs"></td>
-      <td><input type="number" value="0" data-type="value" data-group="pcs"></td>
-      <td><input type="number" value="0" data-type="qty" data-group="mcm"></td>
-      <td><input type="number" value="0" data-type="value" data-group="mcm"></td>`;
-    tbody.appendChild(tr);
-  });
-
-  tbody.addEventListener("input", ()=>updateTotals(tableId));
-  updateTotals(tableId);
+// ── connection badge ──
+function setBadge(state){
+  const b=document.getElementById("conn-badge");
+  const d=document.getElementById("conn-dot");
+  const l=document.getElementById("conn-label");
+  if(state==="ok"){b.className="logo-badge badge-ok";d.textContent="🟢";l.textContent="Sheet Connected";}
+  else if(state==="err"){b.className="logo-badge badge-err";d.textContent="🔴";l.textContent="Connection Error";}
+  else{b.className="logo-badge badge-warn";d.textContent="🟡";l.textContent="Configure Sheet";}
 }
 
-function updateTotals(tableId){
-  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
-  let pcsQty=0, pcsVal=0, mcmQty=0, mcmVal=0;
-  rows.forEach(r=>{
-    const tds = r.querySelectorAll("input");
-    pcsQty += +tds[0].value; pcsVal += +tds[1].value;
-    mcmQty += +tds[2].value; mcmVal += +tds[3].value;
-  });
-  const prefix = tableId==="closingTable" ? "cl" : "op";
-  document.getElementById(prefix+"PcsQtyTot").innerText = pcsQty.toLocaleString();
-  document.getElementById(prefix+"PcsValTot").innerText = pcsVal.toLocaleString();
-  document.getElementById(prefix+"McmQtyTot").innerText = mcmQty.toLocaleString();
-  document.getElementById(prefix+"McmValTot").innerText = mcmVal.toLocaleString();
+// ── API GET ──
+async function apiGet(params){
+  if(!GAS_URL) throw new Error("Apps Script URL not configured. Open Settings.");
+  const res = await fetch(GAS_URL+"?"+new URLSearchParams(params));
+  return res.json();
 }
 
-// ---------- report generator ----------
-function generateReport(){
-  // Get filter values
-  const fromDate = document.getElementById("fromDate").value;
-  const toDate = document.getElementById("toDate").value;
-  const purchaser = document.getElementById("purchaser").value || "Not Specified";
-  const location = document.getElementById("location").value || "All Locations";
-  const reportType = document.getElementById("reportType").value;
-  
-  // Validate dates
-  if (!fromDate || !toDate) {
-    alert("Please select both From Date and To Date");
-    return;
+// ── API POST ──
+async function apiPost(payload){
+  if(!GAS_URL) throw new Error("Apps Script URL not configured. Open Settings.");
+  const res = await fetch(GAS_URL,{method:"POST",body:JSON.stringify(payload)});
+  return res.json();
+}
+
+// ── TEST CONNECTION ──
+async function testConnection(){
+  const url=(document.getElementById("cfg-url").value||"").trim();
+  if(!url){toast("Missing URL","Paste your Apps Script Web App URL first","err");return;}
+  const box=document.getElementById("conn-box");
+  const msg=document.getElementById("conn-msg");
+  box.className="conn-box conn-idle"; msg.textContent="Testing…";
+  try{
+    const r=await fetch(url+"?action=ping");
+    const d=await r.json();
+    if(d.status==="ok"){
+      box.className="conn-box conn-ok";
+      msg.textContent="✅ Connected! "+d.message+" · "+d.timestamp;
+    }else{
+      box.className="conn-box conn-err";
+      msg.textContent="❌ API error: "+(d.message||"unknown");
+    }
+  }catch(e){
+    box.className="conn-box conn-err";
+    msg.textContent="❌ "+e.message+" — check deployment & CORS settings";
   }
-  
-  const opening = readTable("openingTable");
-  const closing = readTable("closingTable");
-  
-  // Calculate totals
-  const totalOpeningPcsQty = total(opening, 'pcsQty');
-  const totalOpeningMcmQty = total(opening, 'mcmQty');
-  const totalOpeningPcsVal = total(opening, 'pcsVal');
-  const totalOpeningMcmVal = total(opening, 'mcmVal');
-  
-  const totalClosingPcsQty = total(closing, 'pcsQty');
-  const totalClosingMcmQty = total(closing, 'mcmQty');
-  const totalClosingPcsVal = total(closing, 'pcsVal');
-  const totalClosingMcmVal = total(closing, 'mcmVal');
-  
-  // Stock Liquidation for years 2021-2024 only
-  let stockSoldPcs2021to2024 = 0;
-  let stockSoldMcm2021to2024 = 0;
-  let totalOpeningStock2021to2024 = 0;
+}
 
-  // Calculate only for years 2021-2024
-  years.forEach(year => {
-    if (year >= 2021 && year <= 2024) {
-      stockSoldPcs2021to2024 += (opening[year]?.pcsQty || 0) - (closing[year]?.pcsQty || 0);
-      stockSoldMcm2021to2024 += (opening[year]?.mcmQty || 0) - (closing[year]?.mcmQty || 0);
-      totalOpeningStock2021to2024 += (opening[year]?.pcsQty || 0) + (opening[year]?.mcmQty || 0);
+// ── SAVE SETTINGS ──
+function saveSettings(){
+  const url=(document.getElementById("cfg-url").value||"").trim();
+  if(!url){toast("Missing","Enter the Web App URL","err");return;}
+  GAS_URL=url; localStorage.setItem("pothys_gas_url",url);
+  setBadge("ok");
+  toast("Saved ✓","Google Sheets connection configured");
+}
+
+// ── SUBMIT FORM ──
+async function submitForm(){
+  const user=document.getElementById("f_user").value.trim();
+  const div=document.getElementById("f_division").value;
+  if(!user){toast("Required","Enter Employee Name","err");return;}
+  if(!div){toast("Required","Select a Division","err");return;}
+  if(!GAS_URL){toast("Not Configured","Go to Settings and set the Sheet URL","err");return;}
+
+  showOverlay("Saving to Google Sheets…");
+  document.getElementById("save-btn").disabled=true;
+
+  const payload={
+    action:"insertFull",
+    data:{
+      user:{name:v("f_user"),empId:v("f_empid"),division:v("f_division"),locationNo:v("f_location"),floor:v("f_floor"),contact:v("f_contact")},
+      division:{name:v("f_division")},
+      linux:{no:v("f_linux_no"),distro:v("f_linux_os"),tag:v("f_linux_tag")},
+      windows:{no:v("f_win_no"),os:v("f_win_os"),tag:v("f_win_tag")},
+      server:{no:v("f_srv_no"),os:v("f_srv_os"),role:v("f_srv_role")},
+      thermal:{no:v("f_tp_no"),model:v("f_tp_model"),status:v("f_tp_status")},
+      barcode:{no:v("f_bc_no"),model:v("f_bc_model"),status:v("f_bc_status")},
+      ink:{no:v("f_ip_no"),model:v("f_ip_model"),status:v("f_ip_status")},
+      cheque:{no:v("f_cp_no"),model:v("f_cp_model"),status:v("f_cp_status")},
+      docScanner:{no:v("f_ds_no"),model:v("f_ds_model"),type:v("f_ds_type")},
+      xerox:{no:v("f_xm_no"),model:v("f_xm_model"),status:v("f_xm_status")},
+      mobileScanner:{no:v("f_ms_no"),model:v("f_ms_model"),status:v("f_ms_status")},
+      networkSwitch:{no:v("f_sw_no"),model:v("f_sw_model"),ports:v("f_sw_ports")},
+      router:{no:v("f_rt_no"),model:v("f_rt_model"),wanIp:v("f_rt_ip")},
+      isp:{name:v("f_isp"),plan:v("f_isp_plan"),accountId:v("f_isp_id")},
     }
-  });
-
-  const totalStockSold2021to2024 = stockSoldPcs2021to2024 + stockSoldMcm2021to2024;
-
-  // Stock Liquidation Percentage for 2021-2024 only
-  const stockLiquidationPercent2021to2024 = totalOpeningStock2021to2024 > 0 ? 
-    ((totalStockSold2021to2024 / totalOpeningStock2021to2024) * 100).toFixed(2) : 0;
-
-  // Use the 2021-2024 values for stock liquidation
-  const stockSoldPcs = stockSoldPcs2021to2024;
-  const stockSoldMcm = stockSoldMcm2021to2024;
-  const totalStockAvailable = totalOpeningStock2021to2024;
-  const totalStockSold = totalStockSold2021to2024;
-  const stockLiquidationPercent = stockLiquidationPercent2021to2024;
-  
-  // Aging analysis
-  const currentYear = Math.max(...years);
-  const lastYear = currentYear - 1;
-  let agingStockQty = 0;
-  let agingStockValue = 0;
-  let agingDetails = [];
-  
-  years.forEach(year => {
-    if (year < lastYear) {
-      const yearQty = opening[year]?.pcsQty + opening[year]?.mcmQty || 0;
-      const yearValue = opening[year]?.pcsVal + opening[year]?.mcmVal || 0;
-      if (yearQty > 0) {
-        agingStockQty += yearQty;
-        agingStockValue += yearValue;
-        agingDetails.push({
-          year: year,
-          qty: yearQty,
-          value: yearValue,
-          age: currentYear - year
-        });
-      }
-    }
-  });
-  
-  // Format dates for display
-  const fromDateFormatted = formatDate(fromDate);
-  const toDateFormatted = formatDate(toDate);
-  const reportDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
-  
-  // Report type display name
-  const reportTypeNames = {
-    'detailed': 'Detailed Report',
-    'summary': 'Summary Report',
-    'aging': 'Aging Analysis',
-    'liquidation': 'Liquidation Report'
   };
-  
-  // Generate report based on selected type
-  let reportHTML = '';
-  
-  // Common header
-  reportHTML += `
-    <div class="report-block" id="reportContent">
-      <div class="header-info">
-        <h3>Stock Position Report <span class="report-type-badge">${reportTypeNames[reportType]}</span></h3>
-        <div class="header-info-grid">
-          <div class="header-info-item">
-            <div class="header-info-label">Report Period</div>
-            <div class="header-info-value">${fromDateFormatted} to ${toDateFormatted}</div>
-          </div>
-          <div class="header-info-item">
-            <div class="header-info-label">Purchaser</div>
-            <div class="header-info-value">${purchaser}</div>
-          </div>
-          <div class="header-info-item">
-            <div class="header-info-label">Location</div>
-            <div class="header-info-value">${location}</div>
-          </div>
-          <div class="header-info-item">
-            <div class="header-info-label">Generated On</div>
-            <div class="header-info-value">${reportDate}</div>
-          </div>
-        </div>
-      </div>`;
-  
-  // Generate content based on report type
-  switch(reportType) {
-    case 'summary':
-      reportHTML += generateSummaryReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty, 
-        totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
-        totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
-        totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-        agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted);
-      break;
-      
-    case 'aging':
-      reportHTML += generateAgingReport(opening, closing, agingDetails, 
-        agingStockQty, agingStockValue, fromDateFormatted, toDateFormatted);
-      break;
-      
-    case 'liquidation':
-      reportHTML += generateLiquidationReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty,
-        totalClosingPcsQty, totalClosingMcmQty, stockSoldPcs, stockSoldMcm,
-        totalStockSold, stockLiquidationPercent, fromDateFormatted, toDateFormatted);
-      break;
-      
-    case 'detailed':
-    default:
-      reportHTML += generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty, 
-        totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
-        totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
-        totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-        agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted);
-      break;
-  }
-  
-  // Single button for image copy
-  reportHTML += `
-      <div class="button-container">
-        <button class="copy-btn" onclick="copyReportAsImage()">
-          📋 Copy Report as Image
-        </button>
-      </div>
-    </div>`;
-  
-  document.getElementById("report").innerHTML = reportHTML;
-}
 
-// Generate Summary Report
-function generateSummaryReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty, 
-  totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
-  totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
-  totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-  agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted) {
-  
-  const totalOpeningValue = totalOpeningPcsVal + totalOpeningMcmVal;
-  const totalClosingValue = totalClosingPcsVal + totalClosingMcmVal;
-  
-  return `
-    <h3>Executive Summary </h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Key Metric</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>Analysis</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Opening Stock</strong></td>
-          <td>${(totalOpeningPcsQty + totalOpeningMcmQty).toLocaleString()}</td>
-          <td>${totalOpeningValue.toLocaleString()}</td>
-          <td>As of ${fromDateFormatted}</td>
-        </tr>
-        <tr>
-          <td><strong>Closing Stock</strong></td>
-          <td>${(totalClosingPcsQty + totalClosingMcmQty).toLocaleString()}</td>
-          <td>${totalClosingValue.toLocaleString()}</td>
-          <td>As of ${toDateFormatted}</td>
-        </tr>
-        <tr class="highlight">
-          <td><strong>Stock Liquidation (2021-2024)</strong></td>
-          <td>${totalStockSold.toLocaleString()}</td>
-          <td>${(totalOpeningValue - totalClosingValue).toLocaleString()}</td>
-          <td>${stockLiquidationPercent}% sold (2021-2024 only)</td>
-        </tr>
-        <tr>
-          <td><strong>Aging Stock (>1 year)</strong></td>
-          <td>${agingStockQty.toLocaleString()}</td>
-          <td>${agingStockValue.toLocaleString()}</td>
-          <td>${agingDetails.length > 0 ? 'Requires attention' : 'No aging stock'}</td>
-        </tr>
-      </tbody>
-    </table>`;
-}
-
-// Generate Aging Report
-function generateAgingReport(opening, closing, agingDetails, 
-  agingStockQty, agingStockValue, fromDateFormatted, toDateFormatted) {
-  
-  const totalOpeningValue = total(opening, 'pcsVal') + total(opening, 'mcmVal');
-  
-  return `
-    <h3>Aging Stock Analysis (${fromDateFormatted} to ${toDateFormatted})</h3>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>Summary</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>% of Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Total Aging Stock (>1 year)</strong></td>
-          <td>${agingStockQty.toLocaleString()}</td>
-          <td>${agingStockValue.toLocaleString()}</td>
-          <td>${totalOpeningValue > 0 ? ((agingStockValue / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    ${agingDetails.length > 0 ? `
-    <h3>Aging Stock Details</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Year</th>
-          <th>Age (Years)</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>% of Total</th>
-          <th>Action Taken</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${agingDetails.map(item => `
-          <tr>
-            <td>${item.year}</td>
-            <td>${item.age}</td>
-            <td>${item.qty.toLocaleString()}</td>
-            <td>${item.value.toLocaleString()}</td>
-            <td>${totalOpeningValue > 0 ? ((item.value / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
-            <td>${item.age > 2 ? 'Urgent clearance initiated' : 'Regular monitoring in progress'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    ` : '<p>No aging stock identified.</p>'}
-  `;
-}
-
-// Generate Liquidation Report
-function generateLiquidationReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty,
-  totalClosingPcsQty, totalClosingMcmQty, stockSoldPcs, stockSoldMcm,
-  totalStockSold, stockLiquidationPercent, fromDateFormatted, toDateFormatted) {
-  
-  const totalOpeningQty = totalOpeningPcsQty + totalOpeningMcmQty;
-  const totalClosingQty = totalClosingPcsQty + totalClosingMcmQty;
-  
-  return `
-    <h3>Stock Liquidation Report (2021-2024 only, ${fromDateFormatted} to ${toDateFormatted})</h3>
-    
-    <table>
-      <thead>
-        <tr>
-          <th>Category</th>
-          <th>Opening</th>
-          <th>Closing</th>
-          <th>Sold</th>
-          <th>Liquidation %</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>PCS (2021-2024)</strong></td>
-          <td>${totalOpeningPcsQty.toLocaleString()}</td>
-          <td>${totalClosingPcsQty.toLocaleString()}</td>
-          <td>${stockSoldPcs.toLocaleString()}</td>
-          <td>${totalOpeningPcsQty > 0 ? ((stockSoldPcs / totalOpeningPcsQty) * 100).toFixed(2) : 0}%</td>
-        </tr>
-        <tr>
-          <td><strong>MCM (2021-2024)</strong></td>
-          <td>${totalOpeningMcmQty.toLocaleString()}</td>
-          <td>${totalClosingMcmQty.toLocaleString()}</td>
-          <td>${stockSoldMcm.toLocaleString()}</td>
-          <td>${totalOpeningMcmQty > 0 ? ((stockSoldMcm / totalOpeningMcmQty) * 100).toFixed(2) : 0}%</td>
-        </tr>
-        <tr class="highlight">
-          <td><strong>Total (2021-2024)</strong></td>
-          <td>${totalOpeningQty.toLocaleString()}</td>
-          <td>${totalClosingQty.toLocaleString()}</td>
-          <td>${totalStockSold.toLocaleString()}</td>
-          <td>${stockLiquidationPercent}%</td>
-        </tr>
-      </tbody>
-    </table>`;
-}
-
-// Generate Detailed Report - FIXED VERSION
-function generateDetailedReport(opening, closing, totalOpeningPcsQty, totalOpeningMcmQty, 
-  totalOpeningPcsVal, totalOpeningMcmVal, totalClosingPcsQty, totalClosingMcmQty, 
-  totalClosingPcsVal, totalClosingMcmVal, stockSoldPcs, stockSoldMcm, 
-  totalStockAvailable, totalStockSold, stockLiquidationPercent, 
-  agingStockQty, agingStockValue, agingDetails, fromDateFormatted, toDateFormatted) {
-  
-  const totalOpeningValue = totalOpeningPcsVal + totalOpeningMcmVal;
-  const totalClosingValue = totalClosingPcsVal + totalClosingMcmVal;
-  
-  return `
-    <h3>Executive Summary </h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Key Metric</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>Analysis</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Opening Stock</strong></td>
-          <td>${(totalOpeningPcsQty + totalOpeningMcmQty).toLocaleString()}</td>
-          <td>${totalOpeningValue.toLocaleString()}</td>
-          <td>As of ${fromDateFormatted}</td>
-        </tr>
-        <tr>
-          <td><strong>Closing Stock</strong></td>
-          <td>${(totalClosingPcsQty + totalClosingMcmQty).toLocaleString()}</td>
-          <td>${totalClosingValue.toLocaleString()}</td>
-          <td>As of ${toDateFormatted}</td>
-        </tr>
-        <tr class="highlight">
-          <td><strong>Stock Liquidation (2021-2024)</strong></td>
-          <td>${totalStockSold.toLocaleString()}</td>
-          <td>${(totalOpeningValue - totalClosingValue).toLocaleString()}</td>
-          <td>${stockLiquidationPercent}% of available stock (2021-2024)</td>
-        </tr>
-        <tr>
-          <td><strong>Aging Stock (>1 year)</strong></td>
-          <td>${agingStockQty.toLocaleString()}</td>
-          <td>${agingStockValue.toLocaleString()}</td>
-          <td>${agingDetails.length} year${agingDetails.length !== 1 ? 's' : ''} aged</td>
-        </tr>
-      </tbody>
-    </table>
-    
-    ${agingDetails.length > 0 ? `
-    <h3>Aging Analysis Details</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Year</th>
-          <th>Age (Years)</th>
-          <th>Quantity</th>
-          <th>Value</th>
-          <th>% of Total</th>
-          <th>Action Taken</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${agingDetails.map(item => `
-          <tr>
-            <td>${item.year}</td>
-            <td>${item.age}</td>
-            <td>${item.qty.toLocaleString()}</td>
-            <td>${item.value.toLocaleString()}</td>
-            <td>${totalOpeningValue > 0 ? ((item.value / totalOpeningValue) * 100).toFixed(2) : 0}%</td>
-            <td>${item.age > 2 ? 'Urgent clearance initiated' : 'Regular monitoring in progress'}</td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    ` : ''}
-    
-    <h3>Year-wise Stock Position</h3>
-    <table>
-      <thead>
-        <tr>
-          <th rowspan="2">Year</th>
-          <th colspan="2">Opening Stock</th>
-          <th colspan="2">Closing Stock</th>
-          <th colspan="2">Stock Clearance %</th>
-        </tr>
-        <tr>
-          <th>Qty</th>
-          <th>Value</th>
-          <th>Qty</th>
-          <th>Value</th>
-          <th>Qty</th>
-          <th>Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${(() => {
-          let totalOpQty = 0;
-          let totalOpVal = 0;
-          let totalClQty = 0;
-          let totalClVal = 0;
-          let clearanceQtySum = 0;
-          let clearanceValSum = 0;
-          let clearanceQtyCount = 0;
-          let clearanceValCount = 0;
-          
-          // Helper function to determine clearance status
-          const getClearanceStatus = (value) => {
-            const numValue = parseFloat(value);
-            if (numValue > 20) return '<span style="color:#28a745;"></span>';
-            else if (numValue > 10) return '<span style="color:#ffc107;"></span>';
-            else if (numValue > 0) return '<span style="color:#fd7e14;"></span>';
-            else if (numValue < 0) return '<span style="color:#dc3545;"></span>';
-            else return '<span style="color:#6c757d;"></span>';
-          };
-          
-          const yearRows = years.map(year => {
-            const opQty = (opening[year]?.pcsQty || 0) + (opening[year]?.mcmQty || 0);
-            const opVal = (opening[year]?.pcsVal || 0) + (opening[year]?.mcmVal || 0);
-            const clQty = (closing[year]?.pcsQty || 0) + (closing[year]?.mcmQty || 0);
-            const clVal = (closing[year]?.pcsVal || 0) + (closing[year]?.mcmVal || 0);
-            
-            // CORRECTED FORMULA: Stock Clearance % = ((Closing - Opening) / Opening) * 100
-            const clearanceQty = opQty > 0 ? (((clQty - opQty) / opQty) * 100).toFixed(2) : '0.00';
-            const clearanceVal = opVal > 0 ? (((clVal - opVal) / opVal) * 100).toFixed(2) : '0.00';
-            
-            // Accumulate totals
-            totalOpQty += opQty;
-            totalOpVal += opVal;
-            totalClQty += clQty;
-            totalClVal += clVal;
-            
-            // Only add to clearance totals if we have valid percentages
-            if (opQty > 0) {
-              clearanceQtySum += Math.abs(parseFloat(clearanceQty));
-              clearanceQtyCount++;
-            }
-            
-            if (opVal > 0) {
-              clearanceValSum += Math.abs(parseFloat(clearanceVal));
-              clearanceValCount++;
-            }
-            
-            return `
-              <tr>
-                <td>${year}</td>
-                <td>${opQty.toLocaleString()}</td>
-                <td>${opVal.toLocaleString()}</td>
-                <td>${clQty.toLocaleString()}</td>
-                <td>${clVal.toLocaleString()}</td>
-                <td>
-                  ${clearanceQty}%
-                  <span class="clearance-status">${getClearanceStatus(clearanceQty)}</span>
-                </td>
-                <td>
-                  ${clearanceVal}%
-                  <span class="clearance-status">${getClearanceStatus(clearanceVal)}</span>
-                </td>
-              </tr>
-            `;
-          }).join('');
-          
-          // Calculate average clearance percentages
-          const avgClearanceQty = clearanceQtyCount > 0 ? (clearanceQtySum / clearanceQtyCount).toFixed(2) : '0.00';
-          const avgClearanceVal = clearanceValCount > 0 ? (clearanceValSum / clearanceValCount).toFixed(2) : '0.00';
-          
-          // Add totals row
-          return yearRows + `
-            <tr class="totals" style="background:#f3f3f3; font-weight:bold;">
-              <td>Total/Avg</td>
-              <td>${totalOpQty.toLocaleString()}</td>
-              <td>${totalOpVal.toLocaleString()}</td>
-              <td>${totalClQty.toLocaleString()}</td>
-              <td>${totalClVal.toLocaleString()}</td>
-              <td>
-                ${avgClearanceQty}%
-                <span class="clearance-status">${getClearanceStatus(avgClearanceQty)}</span>
-              </td>
-              <td>
-                ${avgClearanceVal}%
-                <span class="clearance-status">${getClearanceStatus(avgClearanceVal)}</span>
-              </td>
-            </tr>
-          `;
-        })()}
-      </tbody>
-    </table>
-    
-    
-  `;
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-}
-
-// Simple image copy function that WORKS
-async function copyReportAsImage() {
-  const reportContent = document.getElementById('reportContent');
-  if (!reportContent) {
-    alert('Please generate a report first!');
-    return;
-  }
-  
-  try {
-    // Save button state
-    const button = event.target;
-    const originalText = button.innerHTML;
-    button.innerHTML = '⏳ Generating...';
-    button.disabled = true;
-    
-    // Check if html2canvas is available
-    if (typeof html2canvas === 'undefined') {
-      // Load html2canvas
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://html2canvas.hertzen.com/dist/html2canvas.min.js';
-        script.onload = resolve;
-        script.onerror = reject;
-        document.head.appendChild(script);
-      });
+  try{
+    const res=await apiPost(payload);
+    hideOverlay(); document.getElementById("save-btn").disabled=false;
+    if(res.status==="success"){
+      toast("Saved to Sheets ✓","Entry "+res.entryId+" saved to "+Object.keys(res.sheets||{}).length+" sheet(s)");
+      clearForm();
+    }else{
+      toast("Error",res.message||"Save failed","err");
     }
-    
-    // Create a copy of the report without the copy button
-    const tempDiv = document.createElement('div');
-    tempDiv.style.cssText = `
-      position: fixed;
-      left: -9999px;
-      top: -9999px;
-      width: 800px;
-      background: white;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-    `;
-    
-    // Clone the report content
-    const clonedContent = reportContent.cloneNode(true);
-    
-    // Remove the copy button from cloned content
-    const copyButton = clonedContent.querySelector('.button-container');
-    if (copyButton) {
-      copyButton.remove();
-    }
-    
-    tempDiv.appendChild(clonedContent);
-    document.body.appendChild(tempDiv);
-    
-    // Generate the canvas
-    const canvas = await html2canvas(tempDiv, {
-      scale: 2,
-      backgroundColor: '#ffffff',
-      useCORS: true,
-      logging: false
-    });
-    
-    // Remove temp div
-    document.body.removeChild(tempDiv);
-    
-    // Convert canvas to blob
-    canvas.toBlob(async (blob) => {
-      try {
-        // Try to copy to clipboard
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'image/png': blob
-          })
-        ]);
-        
-        button.innerHTML = '✅ Copied!';
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.disabled = false;
-        }, 2000);
-        
-        alert('✅ Report image copied to clipboard! You can now paste it anywhere.');
-        
-      } catch (clipboardError) {
-        console.error('Clipboard API failed:', clipboardError);
-        
-        // Fallback: Download the image
-        const link = document.createElement('a');
-        link.download = 'stock-report.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-        
-        button.innerHTML = '💾 Downloaded';
-        setTimeout(() => {
-          button.innerHTML = originalText;
-          button.disabled = false;
-        }, 2000);
-        
-        alert('⚠️ Could not copy to clipboard directly. Image has been downloaded instead. You can open it and copy manually.');
-      }
-    });
-    
-  } catch (error) {
-    console.error('Error:', error);
-    
-    // Restore button
-    if (event && event.target) {
-      event.target.innerHTML = '📋 Copy Report as Image';
-      event.target.disabled = false;
-    }
-    
-    alert('Error generating image. Please make sure you have internet connection and try again.');
+  }catch(e){
+    hideOverlay(); document.getElementById("save-btn").disabled=false;
+    toast("Network Error",e.message,"err");
   }
 }
 
-function readTable(id){
-  const data={}
-  const rows = document.querySelectorAll(`#${id} tbody tr`);
-  rows.forEach((r,i)=>{
-    const inputs = r.querySelectorAll("input");
-    data[years[i]] = {
-      pcsQty:+inputs[0].value, pcsVal:+inputs[1].value,
-      mcmQty:+inputs[2].value, mcmVal:+inputs[3].value
-    };
-  });
-  return data;
+// ── RECORDS ──
+let allRows=[],allHdrs=[];
+async function loadRecords(){
+  const key=document.getElementById("rec-sheet-sel").value;
+  document.getElementById("rec-count").textContent="Loading…";
+  if(!GAS_URL){document.getElementById("rec-footer").textContent="⚠ Sheet not configured";return;}
+  try{
+    const res=await apiGet({action:"getSheet",sheet:key});
+    if(res.status==="ok"){
+      allHdrs=res.headers||[]; allRows=res.rows||[];
+      renderRec(allRows);
+    }else{
+      document.getElementById("rec-footer").textContent="Error: "+res.message;
+    }
+  }catch(e){document.getElementById("rec-footer").textContent="Network error: "+e.message;}
 }
 
-function total(obj,...keys){
-  return years.reduce((s,y)=> s + keys.reduce((a,k)=>a+(obj[y][k]||0),0), 0);
+function renderRec(rows){
+  document.getElementById("rec-thead").innerHTML="<tr>"+allHdrs.map(h=>`<th>${h}</th>`).join("")+"<th>Del</th></tr>";
+  document.getElementById("rec-tbody").innerHTML=rows.length
+    ? rows.map(r=>"<tr>"+allHdrs.map(h=>`<td class="${allHdrs[0]===h?'td-m':''}">${r[h]||"—"}</td>`).join("")+`<td><button class="btn btn-red" onclick="deleteRow('${r[allHdrs[0]]}')">🗑</button></td></tr>`).join("")
+    : `<tr><td colspan="${allHdrs.length+1}" style="text-align:center;padding:32px;color:var(--text3)">No records found</td></tr>`;
+  document.getElementById("rec-count").textContent=rows.length+" records";
+  document.getElementById("rec-footer").textContent=rows.length+" entries loaded · Google Sheets";
 }
+
+function searchRecords(q){
+  renderRec(allRows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(q.toLowerCase()))));
+}
+
+async function deleteRow(id){
+  if(!confirm("Delete entry "+id+"? This cannot be undone."))return;
+  const key=document.getElementById("rec-sheet-sel").value;
+  try{
+    const res=await apiPost({action:"delete",sheet:key,entryId:id});
+    toast(res.status==="success"?"Deleted ✓":("Error: "+res.message),(res.status==="success"?"Row removed from "+SHEET_NAMES[key]:res.message),res.status==="success"?"ok":"err");
+    if(res.status==="success")loadRecords();
+  }catch(e){toast("Error",e.message,"err");}
+}
+
+// ── REPORT ──
+async function loadReport(){
+  if(!GAS_URL){toast("Not Configured","Configure the Sheet URL in Settings","err");return;}
+  try{
+    const res=await apiGet({action:"getSummary"});
+    if(res.status==="ok"){
+      let i=1;
+      document.getElementById("report-body").innerHTML=Object.entries(res.summary).map(([k,count])=>
+        `<tr><td class="td-m">${i++}</td><td class="td-p">${k}</td><td style="color:var(--text3)">${SHEET_NAMES[k]||k}</td><td style="font-family:var(--font-mono);color:var(--accent);font-size:16px;font-weight:700">${count}</td></tr>`
+      ).join("");
+    }
+  }catch(e){toast("Error",e.message,"err");}
+}
+
+// ── DASHBOARD SYNC ──
+async function syncDashboard(){
+  if(!GAS_URL){setBadge("none");return;}
+  try{
+    const res=await apiGet({action:"getSummary"});
+    if(res.status==="ok"){
+      const s=res.summary;
+      document.getElementById("s-users").textContent=s.USER||0;
+      document.getElementById("s-sys").textContent=(s.WINDOWS||0)+(s.LINUX||0)+(s.SERVER||0);
+      document.getElementById("s-prn").textContent=(s.THERMAL||0)+(s.BARCODE||0)+(s.INK||0)+(s.CHEQUE||0);
+      document.getElementById("s-net").textContent=(s.SWITCH||0)+(s.ROUTER||0);
+      buildInvGrid(s); setBadge("ok");
+    }
+  }catch(e){setBadge("err");}
+}
+
+function buildInvGrid(s){
+  const items=[
+    {icon:"🖥️",bg:"rgba(74,158,255,.12)",n:"Windows Systems",v:s.WINDOWS||0,c:"var(--blue)"},
+    {icon:"🐧",bg:"rgba(232,160,32,.12)",n:"Linux Systems",v:s.LINUX||0,c:"var(--accent)"},
+    {icon:"🗄️",bg:"rgba(248,113,113,.1)",n:"Server OS",v:s.SERVER||0,c:"var(--red)"},
+    {icon:"🧾",bg:"rgba(62,207,142,.12)",n:"Thermal Printers",v:s.THERMAL||0,c:"var(--green)"},
+    {icon:"📦",bg:"rgba(167,139,250,.1)",n:"Barcode Printers",v:s.BARCODE||0,c:"var(--purple)"},
+    {icon:"💧",bg:"rgba(74,158,255,.12)",n:"Ink Printers",v:s.INK||0,c:"var(--blue)"},
+    {icon:"💳",bg:"rgba(232,160,32,.12)",n:"Cheque Printers",v:s.CHEQUE||0,c:"var(--accent)"},
+    {icon:"📄",bg:"rgba(248,113,113,.1)",n:"Doc Scanners",v:s.DOC_SCANNER||0,c:"var(--red)"},
+    {icon:"📠",bg:"rgba(62,207,142,.12)",n:"Xerox Machines",v:s.XEROX||0,c:"var(--green)"},
+    {icon:"📱",bg:"rgba(167,139,250,.1)",n:"Mobile Scanners",v:s.MOBILE_SCANNER||0,c:"var(--purple)"},
+    {icon:"🔀",bg:"rgba(74,158,255,.12)",n:"Switches",v:s.SWITCH||0,c:"var(--blue)"},
+    {icon:"📡",bg:"rgba(232,160,32,.12)",n:"Routers",v:s.ROUTER||0,c:"var(--accent)"},
+  ];
+  document.getElementById("inv-grid").innerHTML=items.map(i=>
+    `<div class="inv-card"><div class="inv-icon" style="background:${i.bg}">${i.icon}</div>
+    <div class="inv-info"><div class="inv-name">${i.n}</div><div class="inv-count" style="color:${i.c}">${i.v}</div></div></div>`
+  ).join("");
+}
+
+// ── NAV ──
+function showPage(name,el){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  if(el)el.classList.add("active");
+  if(name==="records")loadRecords();
+  if(name==="report")loadReport();
+}
+
+// ── HELPERS ──
+const v=id=>document.getElementById(id).value;
+function clearForm(){document.querySelectorAll("#page-input input,#page-input select").forEach(e=>e.value="");document.getElementById("entry-date").textContent=new Date().toLocaleString("en-IN");}
+function showOverlay(m){document.getElementById("overlay").classList.add("show");document.getElementById("overlay-msg").textContent=m;}
+function hideOverlay(){document.getElementById("overlay").classList.remove("show");}
+function toast(title,sub,type="ok"){
+  document.getElementById("t-title").textContent=title;
+  document.getElementById("t-sub").textContent=sub;
+  document.getElementById("t-icon").textContent=type==="ok"?"✅":type==="err"?"❌":"⚠️";
+  const t=document.getElementById("toast");
+  t.style.borderColor=type==="ok"?"var(--green)":type==="err"?"var(--red)":"var(--accent)";
+  document.getElementById("t-title").style.color=type==="ok"?"var(--green)":type==="err"?"var(--red)":"var(--accent)";
+  t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),4000);
+}
+
+// ── INIT ──
+document.getElementById("entry-date").textContent=new Date().toLocaleString("en-IN");
+buildInvGrid({});
+if(GAS_URL){document.getElementById("cfg-url").value=GAS_URL;setBadge("ok");syncDashboard();}
 </script>
-
 </body>
 </html>
