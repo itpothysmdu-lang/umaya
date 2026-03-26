@@ -257,18 +257,18 @@
     </div>
   </header>
 
-  <!-- SETUP CARD -->
+  <!-- SETUP CARD (pre-filled) -->
   <div class="setup-card">
     <div class="setup-top">
       <div class="setup-title">🟢 Google Sheets Sync</div>
       <button class="setup-toggle" id="guide-btn" onclick="toggleGuide()">▼ How to Set Up</button>
     </div>
     <div class="setup-status">
-      <span class="dot warn" id="status-dot"></span>
-      <span id="status-text">No URL set — saves locally only</span>
+      <span class="dot ok" id="status-dot"></span>
+      <span id="status-text">☁ Connected — scans sync to Google Sheets</span>
     </div>
     <div class="url-row">
-      <input id="inp-url" type="text" placeholder="Paste Google Apps Script Web App URL…">
+      <input id="inp-url" type="text" placeholder="Paste Google Apps Script Web App URL…" value="https://script.google.com/macros/s/AKfycbwXk4jMLIA2_VkcysUGvfvPH8nrYpvktXTgi6tIEDyibxjKsMb9dQQ8XsXFIIFGchz6/exec">
       <button class="btn btn-accent2" onclick="saveUrl()" style="flex:0 0 auto;padding:0 18px;border-radius:10px;font-size:0.85rem;">Save</button>
     </div>
     <div class="setup-body hidden" id="guide-body">
@@ -361,7 +361,7 @@
     </div>
   </div>
 
-  <!-- GOOGLE DRIVE CARD -->
+  <!-- GOOGLE DRIVE CARD (pre-filled) -->
   <div class="drive-card">
     <div class="drive-header-row">
       <div>
@@ -370,11 +370,11 @@
       </div>
     </div>
     <div class="drive-status">
-      <span class="dot warn" id="drive-dot"></span>
-      <span id="drive-status-text">Enter your Drive Folder ID to enable</span>
+      <span class="dot ok" id="drive-dot"></span>
+      <span id="drive-status-text">📁 Folder set — browsing CSVs</span>
     </div>
     <div class="drive-folder-row">
-      <input id="inp-folder-id" type="text" placeholder="Drive Folder ID (from folder URL)…">
+      <input id="inp-folder-id" type="text" placeholder="Drive Folder ID (from folder URL)…" value="1NvNb5v1rLsMutPsjXQ1UADiUiq7vNey9">
       <button class="btn-drive" onclick="saveFolderId()">Save</button>
     </div>
     <div style="font-size:0.68rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:14px;">
@@ -387,7 +387,7 @@
         <button class="drive-refresh" onclick="loadDriveFiles()" title="Refresh">↻</button>
       </div>
       <div id="drive-file-list" class="drive-file-list">
-        <div class="drive-empty">Set Folder ID above to browse files</div>
+        <div class="drive-loading"><span class="drive-spinner"></span>Loading files...</div>
       </div>
     </div>
   </div>
@@ -446,15 +446,14 @@
       <div class="log-header">
         <h2>📊 All Records</h2>
         <div class="log-right">
-          <span class="cloud-pill off" id="cloud-pill">💾 Local</span>
+          <span class="cloud-pill on" id="cloud-pill">☁ Cloud</span>
           <span class="log-count" id="log-count">0 entries</span>
         </div>
       </div>
       <div class="table-wrap">
         <table class="atable">
-          <thead><tr>
-            <th>#</th><th>Name</th><th>QR Value</th><th>Reason</th><th>Time</th><th>☁</th><th></th>
-          </tr></thead>
+          <thead><tr><th>#</th><th>Name</th><th>QR Value</th><th>Reason</th><th>Time</th><th>☁</th><th></th></tr>
+          </thead>
           <tbody id="log-body"></tbody>
         </table>
         <div class="empty-state" id="empty-state">
@@ -510,8 +509,8 @@
 let scanner    = null;
 let isScanning = false;
 let records    = JSON.parse(localStorage.getItem('qr_records') || '[]');
-let webAppUrl  = localStorage.getItem('sheets_url')    || '';
-let folderId   = localStorage.getItem('drive_folder')  || '';
+let webAppUrl  = 'https://script.google.com/macros/s/AKfycbwXk4jMLIA2_VkcysUGvfvPH8nrYpvktXTgi6tIEDyibxjKsMb9dQQ8XsXFIIFGchz6/exec';
+let folderId   = '1NvNb5v1rLsMutPsjXQ1UADiUiq7vNey9';
 let lastQR     = '', cooldown = false;
 let _modalFn   = ()=>{};
 let _previewFile = null; // {id, name, content, url}
@@ -522,12 +521,12 @@ function initials(name){ return name.trim().split(/\s+/).map(w=>w[0].toUpperCase
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (function(){
-  if(webAppUrl){ document.getElementById('inp-url').value=webAppUrl; setStatus('ok','☁ Connected — scans sync to Google Sheets'); setCloudPill(true); }
-  if(folderId){
-    document.getElementById('inp-folder-id').value=folderId;
-    setDriveStatus('ok','📁 Folder set — ready to save & browse CSVs');
-    loadDriveFiles();
-  }
+  document.getElementById('inp-url').value = webAppUrl;
+  document.getElementById('inp-folder-id').value = folderId;
+  setStatus('ok','☁ Connected — scans sync to Google Sheets');
+  setDriveStatus('ok','📁 Folder set — browsing CSVs');
+  setCloudPill(true);
+  loadDriveFiles();
   render();
 })();
 
@@ -562,7 +561,7 @@ function renderPeopleTab(){
         <td class="pt-time">${r.time}</td>
         <td style="text-align:center">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
         <td><button class="pt-del" onclick="deleteSingle(${i})">✕</button></td>
-      </tr>`).join('');
+       </tr>`).join('');
 
     const hasDrive = !!(webAppUrl && folderId);
     return `
@@ -606,7 +605,7 @@ function renderAllTab(){
   if(!records.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
   tbody.innerHTML=records.map((r,i)=>`
-    <tr>
+     <tr>
       <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.7rem">${i+1}</td>
       <td class="td-name">${esc(r.name)||'<span style="color:var(--muted)">—</span>'}</td>
       <td class="td-qr" title="${esc(r.qr)}">${esc(r.qr)}</td>
@@ -614,7 +613,7 @@ function renderAllTab(){
       <td class="td-time">${r.time}</td>
       <td class="td-sync">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
       <td><button class="del-btn" onclick="deleteSingle(${i})">✕</button></td>
-    </tr>`).join('');
+     </tr>`).join('');
 }
 
 // ── DRIVE FOLDER ──────────────────────────────────────────────────────────────
