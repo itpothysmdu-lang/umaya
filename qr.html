@@ -1,0 +1,637 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>QR Scanner & share</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
+
+  :root {
+    --bg:#0a0a0f; --surface:#12121a; --card:#1a1a26; --border:#2a2a3d;
+    --accent:#00e5a0; --accent2:#7b5cff; --text:#e8e8f0; --muted:#6b6b8a;
+    --danger:#ff4d6d; --warn:#ffbe0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,#7b5cff18,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,#00e5a012,transparent);pointer-events:none;z-index:0;}
+  .app{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:16px;}
+
+  /* HEADER */
+  header{display:flex;align-items:center;gap:12px;padding:20px 0 24px;}
+  .logo-mark{width:42px;height:42px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;}
+  header h1{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px;line-height:1.2;}
+  header span{color:var(--accent);}
+  .subtitle{font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+
+  /* SETUP CARD */
+  .setup-card{background:var(--card);border:1px solid var(--accent2);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
+  .setup-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#7b5cff0a,#00e5a008);pointer-events:none;}
+  .setup-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .setup-title{display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:800;color:var(--accent2);}
+  .setup-toggle{background:none;border:1px solid var(--border);color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'Space Mono',monospace;padding:4px 10px;border-radius:8px;transition:all 0.2s;}
+  .setup-toggle:hover{color:var(--accent2);border-color:var(--accent2);}
+  .setup-status{display:flex;align-items:center;gap:8px;font-size:0.78rem;font-family:'Space Mono',monospace;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);margin-bottom:14px;}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .dot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+  .dot.warn{background:var(--warn);box-shadow:0 0 6px var(--warn);animation:pdot 1.4s infinite;}
+  @keyframes pdot{0%,100%{opacity:1}50%{opacity:0.3}}
+  .url-row{display:flex;gap:8px;}
+  .url-row input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.72rem;outline:none;transition:border-color 0.2s;}
+  .url-row input:focus{border-color:var(--accent2);}
+  .url-row input::placeholder{color:var(--muted);}
+  .setup-body{margin-top:16px;}
+  .setup-body.hidden{display:none;}
+  .setup-steps{list-style:none;margin-bottom:14px;}
+  .setup-steps li{display:flex;gap:10px;align-items:flex-start;font-size:0.8rem;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+  .step-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--accent2);color:#fff;font-size:0.65rem;font-weight:800;display:grid;place-items:center;margin-top:1px;}
+  .setup-steps li b{color:var(--text);}
+  .setup-steps li code{font-family:'Space Mono',monospace;font-size:0.7rem;background:var(--surface);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--accent);}
+  .script-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;}
+  .script-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;}
+  .copy-btn{background:var(--accent2);border:none;color:#fff;font-size:0.68rem;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'Space Mono',monospace;}
+  pre{font-family:'Space Mono',monospace;font-size:0.67rem;color:#a0a0c0;white-space:pre-wrap;line-height:1.65;}
+
+  /* FORM */
+  .form-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:16px;}
+  .form-card h2{font-size:0.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace;}
+  .field input,.field textarea{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;}
+  .field input:focus,.field textarea:focus{border-color:var(--accent2);}
+  .field textarea{resize:none;height:72px;}
+
+  /* SCANNER */
+  .scanner-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:16px;}
+  .scanner-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+  .scanner-header h2{font-size:0.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+  .badge{font-size:0.7rem;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--border);}
+  .badge.live{color:var(--accent);border-color:var(--accent);animation:pbadge 1.5s infinite;}
+  .badge.idle{color:var(--muted);}
+  @keyframes pbadge{0%,100%{opacity:1}50%{opacity:0.4}}
+  #qr-reader{width:100%!important;border:none!important;background:#000;}
+  #qr-reader video{width:100%!important;border-radius:0!important;}
+  #qr-reader__scan_region{background:#000;}
+  #qr-reader__dashboard{display:none!important;}
+  .scan-controls{padding:14px 20px;display:flex;gap:10px;}
+  .manual-area{padding:0 20px 16px;}
+  .manual-row{display:flex;gap:8px;}
+  .manual-row input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
+  .manual-row input:focus{border-color:var(--accent);}
+  .manual-row .btn{flex:0 0 auto;width:44px;height:44px;padding:0;border-radius:10px;font-size:1.2rem;}
+
+  /* BUTTONS */
+  .btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .btn-primary{background:var(--accent);color:#000;}
+  .btn-primary:hover{background:#00ffb3;transform:translateY(-1px);}
+  .btn-danger{background:transparent;border:1.5px solid var(--danger);color:var(--danger);}
+  .btn-danger:hover{background:var(--danger);color:#fff;}
+  .btn-ghost{background:var(--surface);color:var(--muted);border:1.5px solid var(--border);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--accent2);}
+  .btn-accent2{background:var(--accent2);color:#fff;border:none;}
+  .btn-accent2:hover{background:#9370ff;transform:translateY(-1px);}
+  .btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;}
+
+  /* TOAST */
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#000;font-weight:700;font-size:0.85rem;padding:10px 22px;border-radius:99px;transition:transform 0.3s cubic-bezier(.34,1.56,.64,1);z-index:9999;white-space:nowrap;font-family:'Space Mono',monospace;box-shadow:0 4px 24px #00e5a040;}
+  #toast.show{transform:translateX(-50%) translateY(0);}
+  #toast.error{background:var(--danger);color:#fff;}
+  #toast.warn{background:var(--warn);color:#000;}
+
+  /* ── TAB SWITCHER ── */
+  .tab-bar{display:flex;gap:6px;margin-bottom:16px;}
+  .tab-btn{flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.18s;}
+  .tab-btn.active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+  .tab-btn:hover:not(.active){color:var(--text);border-color:var(--accent2);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+
+  /* ── BY PERSON CARDS ── */
+  .people-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
+
+  .person-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:border-color 0.2s;}
+  .person-card:hover{border-color:var(--accent2);}
+
+  .person-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;}
+  .person-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:1rem;font-weight:800;flex-shrink:0;color:#fff;}
+  .person-info{flex:1;min-width:0;}
+  .person-name{font-size:0.95rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .person-meta{font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:2px;}
+  .person-actions{display:flex;gap:8px;flex-shrink:0;}
+
+  .p-btn{padding:7px 13px;border-radius:9px;border:none;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.16s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+  .p-btn-dl{background:var(--accent);color:#000;}
+  .p-btn-dl:hover{background:#00ffb3;transform:translateY(-1px);}
+  .p-btn-del{background:transparent;border:1.5px solid var(--danger);color:var(--danger);}
+  .p-btn-del:hover{background:var(--danger);color:#fff;}
+
+  .person-rows{border-top:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
+  .person-rows.open{max-height:600px;}
+
+  .person-table-wrap{overflow-x:auto;}
+  table.ptable{width:100%;border-collapse:collapse;font-size:0.8rem;}
+  table.ptable thead th{background:var(--surface);padding:8px 12px;text-align:left;font-family:'Space Mono',monospace;font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;position:sticky;top:0;}
+  table.ptable tbody tr{border-bottom:1px solid var(--border);}
+  table.ptable tbody tr:last-child{border-bottom:none;}
+  table.ptable tbody td{padding:9px 12px;vertical-align:middle;}
+  .pt-qr{font-family:'Space Mono',monospace;color:var(--accent2);font-size:0.73rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pt-reason{color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pt-time{color:var(--muted);font-family:'Space Mono',monospace;font-size:0.66rem;white-space:nowrap;}
+  .pt-sync{text-align:center;font-size:0.76rem;}
+  .pt-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:2px 5px;border-radius:5px;transition:color 0.2s;}
+  .pt-del:hover{color:var(--danger);}
+
+  .chevron{font-size:0.75rem;color:var(--muted);transition:transform 0.25s;flex-shrink:0;}
+  .person-header.open .chevron{transform:rotate(180deg);}
+
+  .people-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:0.85rem;background:var(--card);border:1px solid var(--border);border-radius:18px;}
+  .people-empty .icon{font-size:2.5rem;margin-bottom:10px;opacity:0.4;}
+
+  /* ── ALL RECORDS TAB ── */
+  .log-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:16px;}
+  .log-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .log-header h2{font-size:0.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+  .log-right{display:flex;align-items:center;gap:8px;}
+  .log-count{font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);background:#00e5a015;border:1px solid #00e5a030;padding:3px 10px;border-radius:99px;}
+  .cloud-pill{font-size:0.7rem;font-family:'Space Mono',monospace;padding:3px 9px;border-radius:99px;}
+  .cloud-pill.on{color:var(--accent);background:#00e5a010;border:1px solid #00e5a040;}
+  .cloud-pill.off{color:var(--muted);background:var(--surface);border:1px solid var(--border);}
+  .table-wrap{overflow-x:auto;max-height:360px;overflow-y:auto;}
+  table.atable{width:100%;border-collapse:collapse;font-size:0.82rem;}
+  table.atable thead th{background:var(--surface);padding:10px 10px;text-align:left;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;position:sticky;top:0;z-index:1;}
+  table.atable tbody tr{border-bottom:1px solid var(--border);animation:rin 0.3s ease;}
+  @keyframes rin{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+  table.atable tbody tr:last-child{border-bottom:none;}
+  table.atable tbody td{padding:10px 10px;vertical-align:middle;}
+  .td-name{font-weight:600;color:var(--text);}
+  .td-qr{font-family:'Space Mono',monospace;color:var(--accent2);font-size:0.73rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .td-reason{color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .td-time{color:var(--muted);font-family:'Space Mono',monospace;font-size:0.66rem;white-space:nowrap;}
+  .td-sync{text-align:center;font-size:0.78rem;}
+  .del-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:2px 4px;border-radius:6px;transition:color 0.2s;}
+  .del-btn:hover{color:var(--danger);}
+  .empty-state{padding:40px 20px;text-align:center;color:var(--muted);font-size:0.85rem;}
+  .empty-state .icon{font-size:2.5rem;margin-bottom:10px;opacity:0.4;}
+
+  .actions{display:flex;gap:10px;margin-bottom:24px;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,16px);opacity:0;pointer-events:none;transition:opacity 0.22s ease;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal-box{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 18px 18px;padding:28px 24px 20px;width:100%;max-width:480px;transform:translateY(40px);transition:transform 0.28s cubic-bezier(.34,1.56,.64,1);text-align:center;}
+  .modal-overlay.open .modal-box{transform:translateY(0);}
+  .modal-icon{font-size:2.2rem;margin-bottom:10px;}
+  .modal-title{font-size:1.1rem;font-weight:800;margin-bottom:6px;}
+  .modal-desc{font-size:0.83rem;color:var(--muted);margin-bottom:22px;line-height:1.5;}
+  .modal-actions{display:flex;gap:10px;}
+  .modal-actions .btn{font-size:0.9rem;padding:13px;}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo-mark">⬛</div>
+    <div>
+      <h1>QR <span>Scanner</span> Share</h1>
+      <div class="subtitle">scan · record · google sheets sync</div>
+    </div>
+  </header>
+
+  <!-- SETUP CARD -->
+  <div class="setup-card">
+    <div class="setup-top">
+      <div class="setup-title">🟢 Google Sheets Sync</div>
+      <button class="setup-toggle" id="guide-btn" onclick="toggleGuide()">▼ How to Set Up</button>
+    </div>
+    <div class="setup-status">
+      <span class="dot warn" id="status-dot"></span>
+      <span id="status-text">No URL set — saves locally only</span>
+    </div>
+    <div class="url-row">
+      <input id="inp-url" type="text" placeholder="Paste Google Apps Script Web App URL…">
+      <button class="btn btn-accent2" onclick="saveUrl()" style="flex:0 0 auto;padding:0 18px;border-radius:10px;font-size:0.85rem;">Save</button>
+    </div>
+    <div class="setup-body hidden" id="guide-body">
+      <br>
+      <ul class="setup-steps">
+        <li><span class="step-num">1</span><span>Open <b>Google Sheets</b>, create a new spreadsheet. Rename sheet tab to <code>Scans</code>.</span></li>
+        <li><span class="step-num">2</span><span>Add headers row 1: <code>No</code> <code>Name</code> <code>QR Value</code> <code>Reason</code> <code>Timestamp</code></span></li>
+        <li><span class="step-num">3</span><span><b>Extensions → Apps Script</b> → paste script below → 💾 Save.</span></li>
+        <li><span class="step-num">4</span><span><b>Deploy → New Deployment → Web App</b>. Execute as: <b>Me</b>. Access: <b>Anyone</b>. Deploy &amp; authorize.</span></li>
+        <li><span class="step-num">5</span><span>Copy the <b>Web App URL</b> → paste above → Save. ✓</span></li>
+      </ul>
+      <div class="script-box">
+        <div class="script-header">APPS SCRIPT <button class="copy-btn" onclick="copyScript()">📋 Copy</button></div>
+        <pre id="script-pre">function doPost(e) {
+  try {
+    var d = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp
+      .getActiveSpreadsheet()
+      .getSheetByName('Scans');
+    var no = Math.max(sheet.getLastRow(), 1);
+    sheet.appendRow([no, d.name||'', d.qr||'', d.reason||'', d.time||new Date().toLocaleString()]);
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'ok'}))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({status:'error',msg:err.message}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENTRY FORM -->
+  <div class="form-card">
+    <h2>📋 Entry Details</h2>
+    <div class="field">
+      <label>WHO IS SCANNING?</label>
+      <input type="text" id="inp-name" placeholder="e.g. John Smith" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>REASON / VALUE / NOTE</label>
+      <textarea id="inp-reason" placeholder="e.g. Inventory check, Attendance, Asset #A-42…"></textarea>
+    </div>
+  </div>
+
+  <!-- SCANNER -->
+  <div class="scanner-card">
+    <div class="scanner-header">
+      <h2>📷 Camera Scanner</h2>
+      <span class="badge idle" id="scan-badge">IDLE</span>
+    </div>
+    <div id="qr-reader"></div>
+    <div class="scan-controls">
+      <button class="btn btn-primary" id="btn-start" onclick="startScan()">▶ Start Camera</button>
+      <button class="btn btn-danger"  id="btn-stop"  onclick="stopScan()" disabled>■ Stop</button>
+    </div>
+    <div class="manual-area">
+      <div class="manual-row">
+        <input type="text" id="inp-manual" placeholder="Or type / paste QR value manually…" autocomplete="off" onkeydown="if(event.key==='Enter')addManual()">
+        <button class="btn btn-ghost" onclick="addManual()">＋</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB SWITCHER -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-people-btn" onclick="switchTab('people')">👤 By Person</button>
+    <button class="tab-btn"        id="tab-all-btn"    onclick="switchTab('all')">📋 All Records</button>
+  </div>
+
+  <!-- ══ TAB: BY PERSON ══ -->
+  <div class="tab-panel active" id="tab-people">
+    <div class="people-list" id="people-list">
+      <div class="people-empty">
+        <div class="icon">👤</div>
+        No scans yet — scans will group here by person name
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: ALL RECORDS ══ -->
+  <div class="tab-panel" id="tab-all">
+    <div class="log-card">
+      <div class="log-header">
+        <h2>📊 All Records</h2>
+        <div class="log-right">
+          <span class="cloud-pill off" id="cloud-pill">💾 Local</span>
+          <span class="log-count" id="log-count">0 entries</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="atable">
+          <thead><tr>
+            <th>#</th><th>Name</th><th>QR Value</th><th>Reason</th><th>Time</th><th>☁</th><th></th>
+          </tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+        <div class="empty-state" id="empty-state">
+          <div class="icon">🔲</div>No scans yet
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="btn-csv"   onclick="downloadAllCSV()" disabled>⬇ Download All CSV</button>
+      <button class="btn btn-ghost"   id="btn-sync"  onclick="retrySyncAll()"   disabled>↑ Sync All</button>
+      <button class="btn btn-ghost"   id="btn-clear" onclick="clearLog()"       disabled>🗑 Clear All</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon"  id="modal-icon">🗑</div>
+    <div class="modal-title" id="modal-title">Are you sure?</div>
+    <div class="modal-desc"  id="modal-desc">This cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost"  onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="modal-ok" onclick="runModalFn()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ────────────────────────────────────────────────────────────────────
+let scanner    = null;
+let isScanning = false;
+let records    = JSON.parse(localStorage.getItem('qr_records') || '[]');
+let webAppUrl  = localStorage.getItem('sheets_url') || '';
+let lastQR     = '', cooldown = false;
+let _modalFn   = ()=>{};
+
+// avatar colour palette
+const COLORS = ['#7b5cff','#00e5a0','#ff4d6d','#ffbe0b','#00b4d8','#f77f00','#9b5de5','#00bbf9'];
+function avatarColor(name){ let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))&0xffff; return COLORS[h%COLORS.length]; }
+function initials(name){ return name.trim().split(/\s+/).map(w=>w[0].toUpperCase()).slice(0,2).join(''); }
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+(function(){
+  if(webAppUrl){ document.getElementById('inp-url').value=webAppUrl; setStatus('ok','☁ Connected — scans sync to Google Sheets'); setCloudPill(true); }
+  render();
+})();
+
+// ── TAB ──────────────────────────────────────────────────────────────────────
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+t+'-btn').classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render(){
+  renderPeopleTab();
+  renderAllTab();
+}
+
+/* ── BY PERSON TAB ── */
+function renderPeopleTab(){
+  const list = document.getElementById('people-list');
+
+  // group by name
+  const groups = {};
+  records.forEach((r,i)=>{
+    const key = (r.name||'').trim() || '(no name)';
+    if(!groups[key]) groups[key]=[];
+    groups[key].push({r,i});
+  });
+
+  const names = Object.keys(groups).sort();
+  if(!names.length){
+    list.innerHTML=`<div class="people-empty"><div class="icon">👤</div>No scans yet — scans will group here by person name</div>`;
+    return;
+  }
+
+  list.innerHTML = names.map(name=>{
+    const items  = groups[name];
+    const count  = items.length;
+    const synced = items.filter(x=>x.r.synced).length;
+    const last   = items[0].r.time;
+    const col    = avatarColor(name);
+    const ini    = initials(name);
+
+    const rows = items.map(({r,i},pos)=>`
+      <tr>
+        <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.68rem">${pos+1}</td>
+        <td class="pt-qr" title="${esc(r.qr)}">${esc(r.qr)}</td>
+        <td class="pt-reason" title="${esc(r.reason)}">${esc(r.reason)||'<span style="color:var(--muted)">—</span>'}</td>
+        <td class="pt-time">${r.time}</td>
+        <td class="pt-sync">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
+        <td><button class="pt-del" onclick="deleteSingle(${i})" title="Delete">✕</button></td>
+      </tr>`).join('');
+
+    return `
+    <div class="person-card" id="pcard-${esc(name)}">
+      <div class="person-header" onclick="togglePerson('${esc(name)}')" id="phdr-${esc(name)}">
+        <div class="person-avatar" style="background:${col}">${ini}</div>
+        <div class="person-info">
+          <div class="person-name">${esc(name)}</div>
+          <div class="person-meta">${count} scan${count!==1?'s':''} &nbsp;·&nbsp; ☁ ${synced}/${count} synced &nbsp;·&nbsp; Last: ${last}</div>
+        </div>
+        <div class="person-actions" onclick="event.stopPropagation()">
+          <button class="p-btn p-btn-dl"  onclick="downloadPersonCSV('${esc(name)}')">⬇ CSV</button>
+          <button class="p-btn p-btn-del" onclick="deletePersonPrompt('${esc(name)}')">🗑</button>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="person-rows" id="prows-${esc(name)}">
+        <div class="person-table-wrap">
+          <table class="ptable">
+            <thead><tr><th>#</th><th>QR Value</th><th>Reason</th><th>Time</th><th>☁</th><th></th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function togglePerson(name){
+  const rows = document.getElementById('prows-'+name);
+  const hdr  = document.getElementById('phdr-'+name);
+  const open = rows.classList.toggle('open');
+  hdr.classList.toggle('open', open);
+}
+
+/* ── ALL RECORDS TAB ── */
+function renderAllTab(){
+  const tbody = document.getElementById('log-body');
+  const empty = document.getElementById('empty-state');
+  document.getElementById('log-count').textContent = records.length+(records.length===1?' entry':' entries');
+  ['btn-csv','btn-sync','btn-clear'].forEach(id=>document.getElementById(id).disabled=!records.length);
+
+  if(!records.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = records.map((r,i)=>`
+    <tr>
+      <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.7rem">${i+1}</td>
+      <td class="td-name">${esc(r.name)||'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="td-qr" title="${esc(r.qr)}">${esc(r.qr)}</td>
+      <td class="td-reason" title="${esc(r.reason)}">${esc(r.reason)||'<span style="color:var(--muted)">—</span>'}</td>
+      <td class="td-time">${r.time}</td>
+      <td class="td-sync">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
+      <td><button class="del-btn" onclick="deleteSingle(${i})">✕</button></td>
+    </tr>`).join('');
+}
+
+// ── DOWNLOAD PER PERSON ──────────────────────────────────────────────────────
+function downloadPersonCSV(name){
+  const rows = records.filter(r=>(r.name||'').trim()===name || ((r.name||'').trim()==='' && name==='(no name)'));
+  if(!rows.length) return;
+  const data = [['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
+    ...rows.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
+  const fname = 'qr_'+name.replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  doCSV(data, fname);
+  showToast(`⬇ ${rows.length} records for ${name}`);
+}
+
+// ── DELETE PER PERSON ────────────────────────────────────────────────────────
+function deletePersonPrompt(name){
+  const count = records.filter(r=>(r.name||'').trim()===name || ((r.name||'').trim()===''&&name==='(no name)')).length;
+  showModal('🗑', `Delete ${name}?`,
+    `Remove all ${count} scan${count!==1?'s':''} by "${name}"? Google Sheets data stays safe.`,
+    `Delete ${count} record${count!==1?'s':''}`,
+    ()=>{
+      records = records.filter(r=>!((r.name||'').trim()===name || ((r.name||'').trim()===''&&name==='(no name)')));
+      saveRecords(); render();
+      showToast(`🗑 Removed all records for ${name}`);
+    });
+}
+
+// ── SINGLE DELETE ────────────────────────────────────────────────────────────
+function deleteSingle(i){
+  records.splice(i,1);
+  saveRecords(); render();
+}
+
+// ── CLEAR ALL ────────────────────────────────────────────────────────────────
+function clearLog(){
+  if(!records.length) return;
+  showModal('🗑','Clear all records?',
+    `Remove all ${records.length} local entries? Google Sheets data stays safe.`,
+    'Yes, Clear All',
+    ()=>{ records=[]; saveRecords(); render(); showToast('All records cleared'); });
+}
+
+// ── DOWNLOAD ALL CSV ─────────────────────────────────────────────────────────
+function downloadAllCSV(){
+  if(!records.length) return;
+  const data=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
+    ...records.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
+  doCSV(data,'qr_log_all_'+new Date().toISOString().slice(0,10)+'.csv');
+  showToast('⬇ Full CSV downloaded!');
+}
+
+function doCSV(rows,fname){
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  Object.assign(document.createElement('a'),{href:url,download:fname}).click();
+  URL.revokeObjectURL(url);
+}
+function cc(v){ if(!v)return''; v=String(v).replace(/"/g,'""'); return/[",\n]/.test(v)?'"'+v+'"':v; }
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+function saveRecords(){ localStorage.setItem('qr_records',JSON.stringify(records)); }
+
+// ── SHEETS SYNC ──────────────────────────────────────────────────────────────
+async function syncToSheets(rec){
+  if(!webAppUrl) return false;
+  try{
+    const res=await fetch(webAppUrl,{method:'POST',body:JSON.stringify(rec),headers:{'Content-Type':'text/plain'}});
+    return (await res.json()).status==='ok';
+  }catch{return false;}
+}
+async function retrySyncAll(){
+  const p=records.filter(r=>!r.synced);
+  if(!p.length){showToast('All synced ✓');return;}
+  if(!webAppUrl){showToast('Set Web App URL first',true);return;}
+  showToast('⏳ Syncing '+p.length+'…',false,true);
+  let ok=0;
+  for(const r of p){if(await syncToSheets(r)){r.synced=true;ok++;}}
+  saveRecords();render();
+  showToast(ok+' / '+p.length+' synced ✓');
+}
+
+// ── ADD RECORD ───────────────────────────────────────────────────────────────
+async function addRecord(qv){
+  const rec={name:document.getElementById('inp-name').value.trim(),qr:qv,reason:document.getElementById('inp-reason').value.trim(),time:now(),synced:false};
+  records.unshift(rec); saveRecords(); render();
+  showToast('✓ '+qv.slice(0,28)+(qv.length>28?'…':''));
+  if(webAppUrl){
+    const ok=await syncToSheets(rec); rec.synced=ok; saveRecords(); render();
+    if(ok) showToast('☁ Synced to Sheets!');
+    else   showToast('⚠ Saved locally — retry Sync All',false,true);
+  }
+}
+function addManual(){
+  const v=document.getElementById('inp-manual').value.trim();
+  if(!v){showToast('Enter a value first',true);return;}
+  addRecord(v); document.getElementById('inp-manual').value='';
+}
+
+// ── CAMERA ───────────────────────────────────────────────────────────────────
+function startScan(){
+  if(isScanning) return;
+  scanner=new Html5Qrcode('qr-reader');
+  scanner.start({facingMode:'environment'},{fps:12,qrbox:{width:240,height:240},aspectRatio:1.0},onScanSuccess,()=>{})
+  .then(()=>{
+    isScanning=true;
+    document.getElementById('btn-start').disabled=true;
+    document.getElementById('btn-stop').disabled=false;
+    document.getElementById('scan-badge').textContent='LIVE';
+    document.getElementById('scan-badge').className='badge live';
+  }).catch(e=>showToast('Camera error: '+e,true));
+}
+function stopScan(){
+  if(!isScanning||!scanner) return;
+  scanner.stop().then(()=>{
+    isScanning=false; scanner.clear();
+    document.getElementById('qr-reader').innerHTML='';
+    document.getElementById('btn-start').disabled=false;
+    document.getElementById('btn-stop').disabled=true;
+    document.getElementById('scan-badge').textContent='IDLE';
+    document.getElementById('scan-badge').className='badge idle';
+  });
+}
+function onScanSuccess(t){
+  if(cooldown||t===lastQR) return;
+  lastQR=t; cooldown=true; addRecord(t);
+  setTimeout(()=>{cooldown=false;lastQR='';},2500);
+}
+
+// ── SETUP ────────────────────────────────────────────────────────────────────
+function toggleGuide(){
+  const b=document.getElementById('guide-body'),btn=document.getElementById('guide-btn');
+  btn.textContent=b.classList.toggle('hidden')?'▼ How to Set Up':'▲ Hide Guide';
+}
+function saveUrl(){
+  const u=document.getElementById('inp-url').value.trim();
+  if(!u){showToast('Paste URL first',true);return;}
+  if(!u.startsWith('https://')){showToast('Must start with https://',true);return;}
+  webAppUrl=u; localStorage.setItem('sheets_url',u);
+  setStatus('ok','☁ Connected'); setCloudPill(true); showToast('✓ URL saved!');
+}
+function setStatus(t,m){document.getElementById('status-dot').className='dot '+t;document.getElementById('status-text').textContent=m;}
+function setCloudPill(on){const e=document.getElementById('cloud-pill');e.className='cloud-pill '+(on?'on':'off');e.textContent=on?'☁ Cloud':'💾 Local';}
+function copyScript(){navigator.clipboard.writeText(document.getElementById('script-pre').textContent).then(()=>showToast('📋 Copied!'));}
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+function showModal(icon,title,desc,label,fn){
+  document.getElementById('modal-icon').textContent=icon;
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-desc').textContent=desc;
+  document.getElementById('modal-ok').textContent=label;
+  _modalFn=fn;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function runModalFn(){closeModal();_modalFn();}
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')closeModal();});
+
+// ── UTILS ────────────────────────────────────────────────────────────────────
+function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+function now(){const d=new Date();return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+let _tt;
+function showToast(msg,isError=false,isWarn=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=isError?'error':isWarn?'warn':'';
+  requestAnimationFrame(()=>t.classList.add('show'));
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
