@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>QR Scanner & share</title>
+<title>QR Scanner · Drive Sync</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
@@ -12,7 +11,7 @@
   :root {
     --bg:#0a0a0f; --surface:#12121a; --card:#1a1a26; --border:#2a2a3d;
     --accent:#00e5a0; --accent2:#7b5cff; --text:#e8e8f0; --muted:#6b6b8a;
-    --danger:#ff4d6d; --warn:#ffbe0b;
+    --danger:#ff4d6d; --warn:#ffbe0b; --drive:#1fa463;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
@@ -38,7 +37,7 @@
   .dot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent);}
   .dot.warn{background:var(--warn);box-shadow:0 0 6px var(--warn);animation:pdot 1.4s infinite;}
   @keyframes pdot{0%,100%{opacity:1}50%{opacity:0.3}}
-  .url-row{display:flex;gap:8px;}
+  .url-row{display:flex;gap:8px;margin-bottom:10px;}
   .url-row input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.72rem;outline:none;transition:border-color 0.2s;}
   .url-row input:focus{border-color:var(--accent2);}
   .url-row input::placeholder{color:var(--muted);}
@@ -53,6 +52,48 @@
   .script-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;}
   .copy-btn{background:var(--accent2);border:none;color:#fff;font-size:0.68rem;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'Space Mono',monospace;}
   pre{font-family:'Space Mono',monospace;font-size:0.67rem;color:#a0a0c0;white-space:pre-wrap;line-height:1.65;}
+
+  /* DRIVE CARD */
+  .drive-card{background:var(--card);border:1px solid #1fa46340;border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
+  .drive-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#1fa46310,transparent);pointer-events:none;}
+  .drive-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .drive-title{display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:800;color:var(--drive);}
+  .drive-subtitle{font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+  .drive-folder-row{display:flex;gap:8px;margin-bottom:12px;}
+  .drive-folder-row input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.72rem;outline:none;transition:border-color 0.2s;}
+  .drive-folder-row input:focus{border-color:var(--drive);}
+  .drive-folder-row input::placeholder{color:var(--muted);}
+  .btn-drive{background:var(--drive);border:none;color:#fff;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;padding:10px 16px;border-radius:10px;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
+  .btn-drive:hover{background:#24c278;transform:translateY(-1px);}
+  .btn-drive:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+  .drive-status{display:flex;align-items:center;gap:8px;font-size:0.75rem;font-family:'Space Mono',monospace;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);margin-bottom:12px;}
+
+  /* DRIVE FILE LIST */
+  .drive-files{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+  .drive-files-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .drive-files-title{font-size:0.75rem;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+  .drive-refresh{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:2px 6px;border-radius:6px;transition:color 0.2s;}
+  .drive-refresh:hover{color:var(--accent);}
+  .drive-file-list{max-height:280px;overflow-y:auto;}
+  .drive-file-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);transition:background 0.15s;}
+  .drive-file-item:last-child{border-bottom:none;}
+  .drive-file-item:hover{background:#ffffff06;}
+  .drive-file-icon{font-size:1.1rem;flex-shrink:0;}
+  .drive-file-info{flex:1;min-width:0;}
+  .drive-file-name{font-size:0.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drive-file-meta{font-size:0.66rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:2px;}
+  .drive-file-actions{display:flex;gap:6px;flex-shrink:0;}
+  .dfa-btn{padding:5px 10px;border-radius:7px;border:none;font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
+  .dfa-view{background:var(--surface);color:var(--accent2);border:1px solid var(--accent2);}
+  .dfa-view:hover{background:var(--accent2);color:#fff;}
+  .dfa-dl{background:var(--drive);color:#fff;}
+  .dfa-dl:hover{background:#24c278;}
+  .dfa-del{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+  .dfa-del:hover{background:var(--danger);color:#fff;}
+  .drive-empty{padding:28px;text-align:center;color:var(--muted);font-size:0.82rem;}
+  .drive-loading{padding:20px;text-align:center;color:var(--muted);font-size:0.78rem;font-family:'Space Mono',monospace;}
+  .drive-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin-right:6px;vertical-align:middle;}
+  @keyframes spin{to{transform:rotate(360deg)}}
 
   /* FORM */
   .form-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:16px;}
@@ -100,36 +141,35 @@
   #toast.error{background:var(--danger);color:#fff;}
   #toast.warn{background:var(--warn);color:#000;}
 
-  /* ── TAB SWITCHER ── */
-  .tab-bar{display:flex;gap:6px;margin-bottom:16px;}
-  .tab-btn{flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.18s;}
+  /* TAB SWITCHER */
+  .tab-bar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+  .tab-btn{flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.18s;min-width:90px;}
   .tab-btn.active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
   .tab-btn:hover:not(.active){color:var(--text);border-color:var(--accent2);}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
 
-  /* ── BY PERSON CARDS ── */
+  /* BY PERSON CARDS */
   .people-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
-
   .person-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:border-color 0.2s;}
   .person-card:hover{border-color:var(--accent2);}
-
   .person-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;}
   .person-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:1rem;font-weight:800;flex-shrink:0;color:#fff;}
   .person-info{flex:1;min-width:0;}
   .person-name{font-size:0.95rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .person-meta{font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:2px;}
-  .person-actions{display:flex;gap:8px;flex-shrink:0;}
-
-  .p-btn{padding:7px 13px;border-radius:9px;border:none;font-family:'Syne',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.16s;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+  .person-actions{display:flex;gap:6px;flex-shrink:0;}
+  .p-btn{padding:6px 10px;border-radius:9px;border:none;font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.16s;display:flex;align-items:center;gap:4px;white-space:nowrap;}
   .p-btn-dl{background:var(--accent);color:#000;}
   .p-btn-dl:hover{background:#00ffb3;transform:translateY(-1px);}
+  .p-btn-drive{background:var(--drive);color:#fff;}
+  .p-btn-drive:hover{background:#24c278;transform:translateY(-1px);}
   .p-btn-del{background:transparent;border:1.5px solid var(--danger);color:var(--danger);}
   .p-btn-del:hover{background:var(--danger);color:#fff;}
-
+  .chevron{font-size:0.75rem;color:var(--muted);transition:transform 0.25s;flex-shrink:0;}
+  .person-header.open .chevron{transform:rotate(180deg);}
   .person-rows{border-top:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
   .person-rows.open{max-height:600px;}
-
   .person-table-wrap{overflow-x:auto;}
   table.ptable{width:100%;border-collapse:collapse;font-size:0.8rem;}
   table.ptable thead th{background:var(--surface);padding:8px 12px;text-align:left;font-family:'Space Mono',monospace;font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;position:sticky;top:0;}
@@ -139,17 +179,12 @@
   .pt-qr{font-family:'Space Mono',monospace;color:var(--accent2);font-size:0.73rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .pt-reason{color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .pt-time{color:var(--muted);font-family:'Space Mono',monospace;font-size:0.66rem;white-space:nowrap;}
-  .pt-sync{text-align:center;font-size:0.76rem;}
   .pt-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:2px 5px;border-radius:5px;transition:color 0.2s;}
   .pt-del:hover{color:var(--danger);}
-
-  .chevron{font-size:0.75rem;color:var(--muted);transition:transform 0.25s;flex-shrink:0;}
-  .person-header.open .chevron{transform:rotate(180deg);}
-
   .people-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:0.85rem;background:var(--card);border:1px solid var(--border);border-radius:18px;}
   .people-empty .icon{font-size:2.5rem;margin-bottom:10px;opacity:0.4;}
 
-  /* ── ALL RECORDS TAB ── */
+  /* ALL RECORDS TAB */
   .log-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:16px;}
   .log-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
   .log-header h2{font-size:0.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
@@ -174,8 +209,8 @@
   .del-btn:hover{color:var(--danger);}
   .empty-state{padding:40px 20px;text-align:center;color:var(--muted);font-size:0.85rem;}
   .empty-state .icon{font-size:2.5rem;margin-bottom:10px;opacity:0.4;}
-
-  .actions{display:flex;gap:10px;margin-bottom:24px;}
+  .actions{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+  .actions .btn{min-width:100px;font-size:0.8rem;padding:10px 12px;}
 
   /* MODAL */
   .modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,16px);opacity:0;pointer-events:none;transition:opacity 0.22s ease;}
@@ -188,6 +223,24 @@
   .modal-actions{display:flex;gap:10px;}
   .modal-actions .btn{font-size:0.9rem;padding:13px;}
 
+  /* FILE PREVIEW MODAL */
+  .preview-overlay{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.22s;}
+  .preview-overlay.open{opacity:1;pointer-events:all;}
+  .preview-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:0;width:100%;max-width:500px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(0.95);transition:transform 0.25s cubic-bezier(.34,1.56,.64,1);}
+  .preview-overlay.open .preview-box{transform:scale(1);}
+  .preview-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .preview-title{font-size:0.85rem;font-weight:800;color:var(--text);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .preview-close{background:var(--surface);border:1px solid var(--border);color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:1rem;display:grid;place-items:center;}
+  .preview-close:hover{color:var(--danger);border-color:var(--danger);}
+  .preview-content{padding:16px;overflow:auto;flex:1;}
+  .preview-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
+  .preview-table thead th{background:var(--surface);padding:8px 10px;text-align:left;font-family:'Space Mono',monospace;font-size:0.64rem;color:var(--muted);text-transform:uppercase;position:sticky;top:0;}
+  .preview-table tbody tr{border-bottom:1px solid var(--border);}
+  .preview-table tbody tr:last-child{border-bottom:none;}
+  .preview-table tbody td{padding:8px 10px;color:var(--text);}
+  .preview-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+  .preview-footer .btn{font-size:0.82rem;padding:10px;}
+
   ::-webkit-scrollbar{width:4px;height:4px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
@@ -199,8 +252,8 @@
   <header>
     <div class="logo-mark">⬛</div>
     <div>
-      <h1>QR <span>Scanner</span> Share</h1>
-      <div class="subtitle">scan · record · google sheets sync</div>
+      <h1>QR <span>Scanner</span> + Drive</h1>
+      <div class="subtitle">scan · record · sheets sync · drive files</div>
     </div>
   </header>
 
@@ -222,16 +275,73 @@
       <br>
       <ul class="setup-steps">
         <li><span class="step-num">1</span><span>Open <b>Google Sheets</b>, create a new spreadsheet. Rename sheet tab to <code>Scans</code>.</span></li>
-        <li><span class="step-num">2</span><span>Add headers row 1: <code>No</code> <code>Name</code> <code>QR Value</code> <code>Reason</code> <code>Timestamp</code></span></li>
-        <li><span class="step-num">3</span><span><b>Extensions → Apps Script</b> → paste script below → 💾 Save.</span></li>
+        <li><span class="step-num">2</span><span>Add headers in row 1: <code>No</code> <code>Name</code> <code>QR Value</code> <code>Reason</code> <code>Timestamp</code></span></li>
+        <li><span class="step-num">3</span><span><b>Extensions → Apps Script</b> → paste the script below → 💾 Save.</span></li>
         <li><span class="step-num">4</span><span><b>Deploy → New Deployment → Web App</b>. Execute as: <b>Me</b>. Access: <b>Anyone</b>. Deploy &amp; authorize.</span></li>
         <li><span class="step-num">5</span><span>Copy the <b>Web App URL</b> → paste above → Save. ✓</span></li>
+        <li><span class="step-num">6</span><span>For <b>Drive file saving</b>, use the extended script below — it handles saving CSVs to your Drive folder too.</span></li>
       </ul>
       <div class="script-box">
-        <div class="script-header">APPS SCRIPT <button class="copy-btn" onclick="copyScript()">📋 Copy</button></div>
+        <div class="script-header">APPS SCRIPT (with Drive support) <button class="copy-btn" onclick="copyScript()">📋 Copy</button></div>
         <pre id="script-pre">function doPost(e) {
   try {
     var d = JSON.parse(e.postData.contents);
+
+    // ── Handle CSV save to Drive ──────────────────
+    if (d.action === 'saveCSV') {
+      var folder = DriveApp.getFolderById(d.folderId);
+      var blob   = Utilities.newBlob(d.csv, 'text/csv', d.filename);
+      var file   = folder.createFile(blob);
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          status:'ok',
+          fileId: file.getId(),
+          fileName: file.getName(),
+          webViewLink: file.getUrl()
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Handle list files in folder ───────────────
+    if (d.action === 'listFiles') {
+      var folder = DriveApp.getFolderById(d.folderId);
+      var files  = folder.getFilesByType('text/csv');
+      var list   = [];
+      while (files.hasNext()) {
+        var f = files.next();
+        list.push({
+          id:       f.getId(),
+          name:     f.getName(),
+          size:     f.getSize(),
+          modified: f.getLastUpdated().toLocaleString(),
+          url:      f.getUrl()
+        });
+      }
+      list.sort((a,b)=> b.modified.localeCompare(a.modified));
+      return ContentService
+        .createTextOutput(JSON.stringify({status:'ok', files: list}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Handle delete file ────────────────────────
+    if (d.action === 'deleteFile') {
+      var file = DriveApp.getFileById(d.fileId);
+      file.setTrashed(true);
+      return ContentService
+        .createTextOutput(JSON.stringify({status:'ok'}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Handle get file content (preview) ─────────
+    if (d.action === 'getFile') {
+      var file    = DriveApp.getFileById(d.fileId);
+      var content = file.getBlob().getDataAsString('UTF-8');
+      return ContentService
+        .createTextOutput(JSON.stringify({status:'ok', content: content, name: file.getName()}))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // ── Default: append row to Sheet ─────────────
     var sheet = SpreadsheetApp
       .getActiveSpreadsheet()
       .getSheetByName('Scans');
@@ -240,12 +350,44 @@
     return ContentService
       .createTextOutput(JSON.stringify({status:'ok'}))
       .setMimeType(ContentService.MimeType.JSON);
+
   } catch(err) {
     return ContentService
-      .createTextOutput(JSON.stringify({status:'error',msg:err.message}))
+      .createTextOutput(JSON.stringify({status:'error', msg: err.message}))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOOGLE DRIVE CARD -->
+  <div class="drive-card">
+    <div class="drive-header-row">
+      <div>
+        <div class="drive-title">📁 Google Drive Files</div>
+        <div class="drive-subtitle">View · Download · Delete CSV files from your Drive folder</div>
+      </div>
+    </div>
+    <div class="drive-status">
+      <span class="dot warn" id="drive-dot"></span>
+      <span id="drive-status-text">Enter your Drive Folder ID to enable</span>
+    </div>
+    <div class="drive-folder-row">
+      <input id="inp-folder-id" type="text" placeholder="Drive Folder ID (from folder URL)…">
+      <button class="btn-drive" onclick="saveFolderId()">Save</button>
+    </div>
+    <div style="font-size:0.68rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:14px;">
+      📌 Folder ID is the part after <code style="color:var(--accent)">/folders/</code> in the Drive URL
+    </div>
+
+    <div class="drive-files">
+      <div class="drive-files-header">
+        <span class="drive-files-title">📄 CSV Files in Folder</span>
+        <button class="drive-refresh" onclick="loadDriveFiles()" title="Refresh">↻</button>
+      </div>
+      <div id="drive-file-list" class="drive-file-list">
+        <div class="drive-empty">Set Folder ID above to browse files</div>
       </div>
     </div>
   </div>
@@ -288,7 +430,7 @@
     <button class="tab-btn"        id="tab-all-btn"    onclick="switchTab('all')">📋 All Records</button>
   </div>
 
-  <!-- ══ TAB: BY PERSON ══ -->
+  <!-- TAB: BY PERSON -->
   <div class="tab-panel active" id="tab-people">
     <div class="people-list" id="people-list">
       <div class="people-empty">
@@ -298,7 +440,7 @@
     </div>
   </div>
 
-  <!-- ══ TAB: ALL RECORDS ══ -->
+  <!-- TAB: ALL RECORDS -->
   <div class="tab-panel" id="tab-all">
     <div class="log-card">
       <div class="log-header">
@@ -321,9 +463,10 @@
       </div>
     </div>
     <div class="actions">
-      <button class="btn btn-primary" id="btn-csv"   onclick="downloadAllCSV()" disabled>⬇ Download All CSV</button>
-      <button class="btn btn-ghost"   id="btn-sync"  onclick="retrySyncAll()"   disabled>↑ Sync All</button>
-      <button class="btn btn-ghost"   id="btn-clear" onclick="clearLog()"       disabled>🗑 Clear All</button>
+      <button class="btn btn-primary" id="btn-csv"       onclick="downloadAllCSV()"  disabled>⬇ CSV</button>
+      <button class="btn btn-drive"   id="btn-drive-all" onclick="saveAllToDrive()"  disabled style="background:var(--drive);color:#fff;border:none;">📁 Save to Drive</button>
+      <button class="btn btn-ghost"   id="btn-sync"      onclick="retrySyncAll()"    disabled>↑ Sync</button>
+      <button class="btn btn-ghost"   id="btn-clear"     onclick="clearLog()"        disabled>🗑 Clear</button>
     </div>
   </div>
 
@@ -331,7 +474,7 @@
 
 <div id="toast"></div>
 
-<!-- MODAL -->
+<!-- CONFIRM MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal-box">
     <div class="modal-icon"  id="modal-icon">🗑</div>
@@ -344,27 +487,51 @@
   </div>
 </div>
 
+<!-- FILE PREVIEW MODAL -->
+<div class="preview-overlay" id="preview-overlay">
+  <div class="preview-box">
+    <div class="preview-header">
+      <div class="preview-title" id="preview-title">File Preview</div>
+      <button class="preview-close" onclick="closePreview()">✕</button>
+    </div>
+    <div class="preview-content" id="preview-content">
+      <div class="drive-loading"><span class="drive-spinner"></span>Loading…</div>
+    </div>
+    <div class="preview-footer">
+      <button class="btn btn-primary"  id="preview-dl-btn"  onclick="downloadPreviewFile()">⬇ Download</button>
+      <button class="btn btn-danger"   id="preview-del-btn" onclick="deletePreviewFile()">🗑 Delete</button>
+      <button class="btn btn-ghost"    onclick="closePreview()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── STATE ────────────────────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────────────────────────
 let scanner    = null;
 let isScanning = false;
 let records    = JSON.parse(localStorage.getItem('qr_records') || '[]');
-let webAppUrl  = localStorage.getItem('sheets_url') || '';
+let webAppUrl  = localStorage.getItem('sheets_url')    || '';
+let folderId   = localStorage.getItem('drive_folder')  || '';
 let lastQR     = '', cooldown = false;
 let _modalFn   = ()=>{};
+let _previewFile = null; // {id, name, content, url}
 
-// avatar colour palette
 const COLORS = ['#7b5cff','#00e5a0','#ff4d6d','#ffbe0b','#00b4d8','#f77f00','#9b5de5','#00bbf9'];
 function avatarColor(name){ let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))&0xffff; return COLORS[h%COLORS.length]; }
 function initials(name){ return name.trim().split(/\s+/).map(w=>w[0].toUpperCase()).slice(0,2).join(''); }
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────────
 (function(){
   if(webAppUrl){ document.getElementById('inp-url').value=webAppUrl; setStatus('ok','☁ Connected — scans sync to Google Sheets'); setCloudPill(true); }
+  if(folderId){
+    document.getElementById('inp-folder-id').value=folderId;
+    setDriveStatus('ok','📁 Folder set — ready to save & browse CSVs');
+    loadDriveFiles();
+  }
   render();
 })();
 
-// ── TAB ──────────────────────────────────────────────────────────────────────
+// ── TAB ───────────────────────────────────────────────────────────────────────
 function switchTab(t){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -372,59 +539,44 @@ function switchTab(t){
   document.getElementById('tab-'+t).classList.add('active');
 }
 
-// ── RENDER ───────────────────────────────────────────────────────────────────
-function render(){
-  renderPeopleTab();
-  renderAllTab();
-}
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render(){ renderPeopleTab(); renderAllTab(); }
 
-/* ── BY PERSON TAB ── */
+/* BY PERSON TAB */
 function renderPeopleTab(){
   const list = document.getElementById('people-list');
-
-  // group by name
   const groups = {};
-  records.forEach((r,i)=>{
-    const key = (r.name||'').trim() || '(no name)';
-    if(!groups[key]) groups[key]=[];
-    groups[key].push({r,i});
-  });
-
+  records.forEach((r,i)=>{ const key=(r.name||'').trim()||'(no name)'; if(!groups[key])groups[key]=[]; groups[key].push({r,i}); });
   const names = Object.keys(groups).sort();
-  if(!names.length){
-    list.innerHTML=`<div class="people-empty"><div class="icon">👤</div>No scans yet — scans will group here by person name</div>`;
-    return;
-  }
+  if(!names.length){ list.innerHTML=`<div class="people-empty"><div class="icon">👤</div>No scans yet</div>`; return; }
 
   list.innerHTML = names.map(name=>{
-    const items  = groups[name];
-    const count  = items.length;
-    const synced = items.filter(x=>x.r.synced).length;
-    const last   = items[0].r.time;
-    const col    = avatarColor(name);
-    const ini    = initials(name);
-
-    const rows = items.map(({r,i},pos)=>`
+    const items=groups[name], count=items.length;
+    const synced=items.filter(x=>x.r.synced).length;
+    const col=avatarColor(name), ini=initials(name);
+    const rows=items.map(({r,i},pos)=>`
       <tr>
         <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.68rem">${pos+1}</td>
         <td class="pt-qr" title="${esc(r.qr)}">${esc(r.qr)}</td>
         <td class="pt-reason" title="${esc(r.reason)}">${esc(r.reason)||'<span style="color:var(--muted)">—</span>'}</td>
         <td class="pt-time">${r.time}</td>
-        <td class="pt-sync">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
-        <td><button class="pt-del" onclick="deleteSingle(${i})" title="Delete">✕</button></td>
+        <td style="text-align:center">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
+        <td><button class="pt-del" onclick="deleteSingle(${i})">✕</button></td>
       </tr>`).join('');
 
+    const hasDrive = !!(webAppUrl && folderId);
     return `
-    <div class="person-card" id="pcard-${esc(name)}">
+    <div class="person-card">
       <div class="person-header" onclick="togglePerson('${esc(name)}')" id="phdr-${esc(name)}">
         <div class="person-avatar" style="background:${col}">${ini}</div>
         <div class="person-info">
           <div class="person-name">${esc(name)}</div>
-          <div class="person-meta">${count} scan${count!==1?'s':''} &nbsp;·&nbsp; ☁ ${synced}/${count} synced &nbsp;·&nbsp; Last: ${last}</div>
+          <div class="person-meta">${count} scan${count!==1?'s':''} · ☁ ${synced}/${count} · Last: ${items[0].r.time}</div>
         </div>
         <div class="person-actions" onclick="event.stopPropagation()">
-          <button class="p-btn p-btn-dl"  onclick="downloadPersonCSV('${esc(name)}')">⬇ CSV</button>
-          <button class="p-btn p-btn-del" onclick="deletePersonPrompt('${esc(name)}')">🗑</button>
+          <button class="p-btn p-btn-dl"    onclick="downloadPersonCSV('${esc(name)}')">⬇</button>
+          ${hasDrive?`<button class="p-btn p-btn-drive" onclick="savePersonToDrive('${esc(name)}')">📁</button>`:''}
+          <button class="p-btn p-btn-del"   onclick="deletePersonPrompt('${esc(name)}')">🗑</button>
         </div>
         <span class="chevron">▼</span>
       </div>
@@ -441,22 +593,19 @@ function renderPeopleTab(){
 }
 
 function togglePerson(name){
-  const rows = document.getElementById('prows-'+name);
-  const hdr  = document.getElementById('phdr-'+name);
-  const open = rows.classList.toggle('open');
-  hdr.classList.toggle('open', open);
+  const rows=document.getElementById('prows-'+name);
+  const hdr=document.getElementById('phdr-'+name);
+  hdr.classList.toggle('open', rows.classList.toggle('open'));
 }
 
-/* ── ALL RECORDS TAB ── */
+/* ALL RECORDS TAB */
 function renderAllTab(){
-  const tbody = document.getElementById('log-body');
-  const empty = document.getElementById('empty-state');
-  document.getElementById('log-count').textContent = records.length+(records.length===1?' entry':' entries');
-  ['btn-csv','btn-sync','btn-clear'].forEach(id=>document.getElementById(id).disabled=!records.length);
-
+  const tbody=document.getElementById('log-body'), empty=document.getElementById('empty-state');
+  document.getElementById('log-count').textContent=records.length+(records.length===1?' entry':' entries');
+  ['btn-csv','btn-sync','btn-clear','btn-drive-all'].forEach(id=>document.getElementById(id).disabled=!records.length);
   if(!records.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-  tbody.innerHTML = records.map((r,i)=>`
+  tbody.innerHTML=records.map((r,i)=>`
     <tr>
       <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.7rem">${i+1}</td>
       <td class="td-name">${esc(r.name)||'<span style="color:var(--muted)">—</span>'}</td>
@@ -468,46 +617,195 @@ function renderAllTab(){
     </tr>`).join('');
 }
 
-// ── DOWNLOAD PER PERSON ──────────────────────────────────────────────────────
-function downloadPersonCSV(name){
-  const rows = records.filter(r=>(r.name||'').trim()===name || ((r.name||'').trim()==='' && name==='(no name)'));
-  if(!rows.length) return;
-  const data = [['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
-    ...rows.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
-  const fname = 'qr_'+name.replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
-  doCSV(data, fname);
-  showToast(`⬇ ${rows.length} records for ${name}`);
+// ── DRIVE FOLDER ──────────────────────────────────────────────────────────────
+function saveFolderId(){
+  const v=document.getElementById('inp-folder-id').value.trim();
+  if(!v){showToast('Enter Folder ID first',true);return;}
+  folderId=v; localStorage.setItem('drive_folder',v);
+  setDriveStatus('ok','📁 Folder set — browsing CSVs');
+  showToast('✓ Folder ID saved!');
+  loadDriveFiles();
 }
 
-// ── DELETE PER PERSON ────────────────────────────────────────────────────────
-function deletePersonPrompt(name){
-  const count = records.filter(r=>(r.name||'').trim()===name || ((r.name||'').trim()===''&&name==='(no name)')).length;
-  showModal('🗑', `Delete ${name}?`,
-    `Remove all ${count} scan${count!==1?'s':''} by "${name}"? Google Sheets data stays safe.`,
-    `Delete ${count} record${count!==1?'s':''}`,
-    ()=>{
-      records = records.filter(r=>!((r.name||'').trim()===name || ((r.name||'').trim()===''&&name==='(no name)')));
-      saveRecords(); render();
-      showToast(`🗑 Removed all records for ${name}`);
+function setDriveStatus(t,m){
+  document.getElementById('drive-dot').className='dot '+t;
+  document.getElementById('drive-status-text').textContent=m;
+}
+
+// ── DRIVE FILE LIST ───────────────────────────────────────────────────────────
+async function loadDriveFiles(){
+  if(!webAppUrl||!folderId){
+    document.getElementById('drive-file-list').innerHTML='<div class="drive-empty">Set both Apps Script URL and Folder ID to browse</div>';
+    return;
+  }
+  document.getElementById('drive-file-list').innerHTML='<div class="drive-loading"><span class="drive-spinner"></span>Loading files…</div>';
+  try{
+    const res=await appsScriptPost({action:'listFiles',folderId});
+    if(res.status!=='ok') throw new Error(res.msg||'Failed');
+    renderDriveFiles(res.files||[]);
+  }catch(e){
+    document.getElementById('drive-file-list').innerHTML=`<div class="drive-empty">⚠ ${e.message}</div>`;
+  }
+}
+
+function renderDriveFiles(files){
+  const el=document.getElementById('drive-file-list');
+  if(!files.length){el.innerHTML='<div class="drive-empty">No CSV files found in this folder</div>';return;}
+  el.innerHTML=files.map(f=>`
+    <div class="drive-file-item">
+      <div class="drive-file-icon">📄</div>
+      <div class="drive-file-info">
+        <div class="drive-file-name" title="${esc(f.name)}">${esc(f.name)}</div>
+        <div class="drive-file-meta">${fmtSize(f.size)} · ${f.modified}</div>
+      </div>
+      <div class="drive-file-actions">
+        <button class="dfa-btn dfa-view" onclick="previewFile('${esc(f.id)}','${esc(f.name)}','${esc(f.url)}')">👁 View</button>
+        <button class="dfa-btn dfa-dl"   onclick="downloadDriveFile('${esc(f.id)}','${esc(f.name)}')">⬇</button>
+        <button class="dfa-btn dfa-del"  onclick="deleteDriveFilePrompt('${esc(f.id)}','${esc(f.name)}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function fmtSize(bytes){
+  if(!bytes) return '—';
+  if(bytes<1024) return bytes+'B';
+  if(bytes<1048576) return (bytes/1024).toFixed(1)+'KB';
+  return (bytes/1048576).toFixed(1)+'MB';
+}
+
+// ── PREVIEW FILE ──────────────────────────────────────────────────────────────
+async function previewFile(fileId, fileName, fileUrl){
+  _previewFile={id:fileId, name:fileName, url:fileUrl, content:null};
+  document.getElementById('preview-title').textContent=fileName;
+  document.getElementById('preview-content').innerHTML='<div class="drive-loading"><span class="drive-spinner"></span>Loading preview…</div>';
+  document.getElementById('preview-overlay').classList.add('open');
+
+  try{
+    const res=await appsScriptPost({action:'getFile', fileId});
+    if(res.status!=='ok') throw new Error(res.msg||'Could not load file');
+    _previewFile.content=res.content;
+    renderCSVPreview(res.content);
+  }catch(e){
+    document.getElementById('preview-content').innerHTML=`<div style="color:var(--danger);padding:20px;font-size:0.82rem;">⚠ ${e.message}</div>`;
+  }
+}
+
+function renderCSVPreview(csvText){
+  const lines=csvText.trim().split('\n').filter(Boolean);
+  if(!lines.length){document.getElementById('preview-content').innerHTML='<div class="drive-empty">Empty file</div>';return;}
+  const rows=lines.map(l=>parseCSVLine(l));
+  const [header,...body]=rows;
+  const th=header.map(h=>`<th>${esc(h)}</th>`).join('');
+  const tb=body.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('');
+  document.getElementById('preview-content').innerHTML=`
+    <table class="preview-table">
+      <thead><tr>${th}</tr></thead>
+      <tbody>${tb}</tbody>
+    </table>`;
+}
+
+function parseCSVLine(line){
+  const cols=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'&&!inQ){inQ=true;}
+    else if(c==='"'&&inQ&&line[i+1]==='"'){cur+='"';i++;}
+    else if(c==='"'&&inQ){inQ=false;}
+    else if(c===','&&!inQ){cols.push(cur);cur='';}
+    else{cur+=c;}
+  }
+  cols.push(cur); return cols;
+}
+
+function closePreview(){ document.getElementById('preview-overlay').classList.remove('open'); _previewFile=null; }
+
+function downloadPreviewFile(){
+  if(!_previewFile?.content) return;
+  const url=URL.createObjectURL(new Blob([_previewFile.content],{type:'text/csv;charset=utf-8;'}));
+  Object.assign(document.createElement('a'),{href:url,download:_previewFile.name}).click();
+  URL.revokeObjectURL(url);
+  showToast('⬇ Downloaded!');
+}
+
+function deletePreviewFile(){
+  if(!_previewFile) return;
+  const {id,name}=_previewFile;
+  closePreview();
+  deleteDriveFilePrompt(id,name);
+}
+
+// ── DELETE DRIVE FILE ─────────────────────────────────────────────────────────
+function deleteDriveFilePrompt(fileId, fileName){
+  showModal('🗑','Delete from Drive?',
+    `"${fileName}" will be moved to Trash in Google Drive.`,
+    'Delete File',
+    async ()=>{
+      try{
+        showToast('⏳ Deleting…',false,true);
+        const res=await appsScriptPost({action:'deleteFile',fileId});
+        if(res.status!=='ok') throw new Error(res.msg||'Delete failed');
+        showToast('🗑 Deleted from Drive!');
+        loadDriveFiles();
+      }catch(e){ showToast('⚠ '+e.message,true); }
     });
 }
 
-// ── SINGLE DELETE ────────────────────────────────────────────────────────────
-function deleteSingle(i){
-  records.splice(i,1);
-  saveRecords(); render();
+// ── DOWNLOAD DRIVE FILE ───────────────────────────────────────────────────────
+async function downloadDriveFile(fileId, fileName){
+  showToast('⏳ Fetching file…',false,true);
+  try{
+    const res=await appsScriptPost({action:'getFile',fileId});
+    if(res.status!=='ok') throw new Error(res.msg||'Failed');
+    const url=URL.createObjectURL(new Blob([res.content],{type:'text/csv;charset=utf-8;'}));
+    Object.assign(document.createElement('a'),{href:url,download:fileName}).click();
+    URL.revokeObjectURL(url);
+    showToast('⬇ Downloaded!');
+  }catch(e){ showToast('⚠ '+e.message,true); }
 }
 
-// ── CLEAR ALL ────────────────────────────────────────────────────────────────
-function clearLog(){
+// ── SAVE CSV TO DRIVE ─────────────────────────────────────────────────────────
+async function saveCSVToDrive(rows, filename){
+  if(!webAppUrl||!folderId){showToast('Set Apps Script URL & Folder ID first',true);return false;}
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  try{
+    const res=await appsScriptPost({action:'saveCSV',folderId,csv,filename});
+    if(res.status!=='ok') throw new Error(res.msg||'Save failed');
+    return res;
+  }catch(e){ showToast('⚠ Drive save: '+e.message,true); return false; }
+}
+
+async function saveAllToDrive(){
   if(!records.length) return;
-  showModal('🗑','Clear all records?',
-    `Remove all ${records.length} local entries? Google Sheets data stays safe.`,
-    'Yes, Clear All',
-    ()=>{ records=[]; saveRecords(); render(); showToast('All records cleared'); });
+  const rows=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
+    ...records.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
+  const fname='qr_all_'+new Date().toISOString().slice(0,10)+'_'+Date.now()+'.csv';
+  showToast('⏳ Saving to Drive…',false,true);
+  const res=await saveCSVToDrive(rows,fname);
+  if(res){ showToast('📁 Saved to Drive: '+res.fileName); loadDriveFiles(); }
 }
 
-// ── DOWNLOAD ALL CSV ─────────────────────────────────────────────────────────
+async function savePersonToDrive(name){
+  const rows=records.filter(r=>(r.name||'').trim()===name||(((r.name||'').trim()===''&&name==='(no name)')));
+  if(!rows.length) return;
+  const data=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
+    ...rows.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
+  const fname='qr_'+name.replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  showToast('⏳ Saving to Drive…',false,true);
+  const res=await saveCSVToDrive(data,fname);
+  if(res){ showToast('📁 Saved: '+res.fileName); loadDriveFiles(); }
+}
+
+// ── DOWNLOAD LOCAL CSV ────────────────────────────────────────────────────────
+function downloadPersonCSV(name){
+  const rows=records.filter(r=>(r.name||'').trim()===name||((r.name||'').trim()===''&&name==='(no name)'));
+  if(!rows.length) return;
+  const data=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
+    ...rows.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
+  const fname='qr_'+name.replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  doCSV(data,fname);
+  showToast('⬇ '+rows.length+' records for '+name);
+}
+
 function downloadAllCSV(){
   if(!records.length) return;
   const data=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
@@ -524,16 +822,19 @@ function doCSV(rows,fname){
 }
 function cc(v){ if(!v)return''; v=String(v).replace(/"/g,'""'); return/[",\n]/.test(v)?'"'+v+'"':v; }
 
-// ── STORAGE ──────────────────────────────────────────────────────────────────
+// ── STORAGE ───────────────────────────────────────────────────────────────────
 function saveRecords(){ localStorage.setItem('qr_records',JSON.stringify(records)); }
 
-// ── SHEETS SYNC ──────────────────────────────────────────────────────────────
+// ── APPS SCRIPT POST ──────────────────────────────────────────────────────────
+async function appsScriptPost(payload){
+  const res=await fetch(webAppUrl,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}});
+  return await res.json();
+}
+
+// ── SHEETS SYNC ───────────────────────────────────────────────────────────────
 async function syncToSheets(rec){
   if(!webAppUrl) return false;
-  try{
-    const res=await fetch(webAppUrl,{method:'POST',body:JSON.stringify(rec),headers:{'Content-Type':'text/plain'}});
-    return (await res.json()).status==='ok';
-  }catch{return false;}
+  try{ const r=await appsScriptPost(rec); return r.status==='ok'; }catch{return false;}
 }
 async function retrySyncAll(){
   const p=records.filter(r=>!r.synced);
@@ -541,12 +842,11 @@ async function retrySyncAll(){
   if(!webAppUrl){showToast('Set Web App URL first',true);return;}
   showToast('⏳ Syncing '+p.length+'…',false,true);
   let ok=0;
-  for(const r of p){if(await syncToSheets(r)){r.synced=true;ok++;}}
-  saveRecords();render();
-  showToast(ok+' / '+p.length+' synced ✓');
+  for(const r of p){ if(await syncToSheets(r)){r.synced=true;ok++;} }
+  saveRecords(); render(); showToast(ok+' / '+p.length+' synced ✓');
 }
 
-// ── ADD RECORD ───────────────────────────────────────────────────────────────
+// ── ADD RECORD ────────────────────────────────────────────────────────────────
 async function addRecord(qv){
   const rec={name:document.getElementById('inp-name').value.trim(),qr:qv,reason:document.getElementById('inp-reason').value.trim(),time:now(),synced:false};
   records.unshift(rec); saveRecords(); render();
@@ -563,7 +863,23 @@ function addManual(){
   addRecord(v); document.getElementById('inp-manual').value='';
 }
 
-// ── CAMERA ───────────────────────────────────────────────────────────────────
+// ── DELETE ────────────────────────────────────────────────────────────────────
+function deleteSingle(i){ records.splice(i,1); saveRecords(); render(); }
+
+function deletePersonPrompt(name){
+  const count=records.filter(r=>(r.name||'').trim()===name||((r.name||'').trim()===''&&name==='(no name)')).length;
+  showModal('🗑',`Delete ${name}?`,`Remove all ${count} scan${count!==1?'s':''} by "${name}"? Google Sheets data stays safe.`,
+    `Delete ${count} record${count!==1?'s':''}`,
+    ()=>{ records=records.filter(r=>!((r.name||'').trim()===name||((r.name||'').trim()===''&&name==='(no name)'))); saveRecords(); render(); showToast(`🗑 Removed all records for ${name}`); });
+}
+
+function clearLog(){
+  if(!records.length) return;
+  showModal('🗑','Clear all records?',`Remove all ${records.length} local entries? Google Sheets data stays safe.`,'Yes, Clear All',
+    ()=>{ records=[]; saveRecords(); render(); showToast('All records cleared'); });
+}
+
+// ── CAMERA ────────────────────────────────────────────────────────────────────
 function startScan(){
   if(isScanning) return;
   scanner=new Html5Qrcode('qr-reader');
@@ -593,7 +909,7 @@ function onScanSuccess(t){
   setTimeout(()=>{cooldown=false;lastQR='';},2500);
 }
 
-// ── SETUP ────────────────────────────────────────────────────────────────────
+// ── SETUP ─────────────────────────────────────────────────────────────────────
 function toggleGuide(){
   const b=document.getElementById('guide-body'),btn=document.getElementById('guide-btn');
   btn.textContent=b.classList.toggle('hidden')?'▼ How to Set Up':'▲ Hide Guide';
@@ -604,12 +920,13 @@ function saveUrl(){
   if(!u.startsWith('https://')){showToast('Must start with https://',true);return;}
   webAppUrl=u; localStorage.setItem('sheets_url',u);
   setStatus('ok','☁ Connected'); setCloudPill(true); showToast('✓ URL saved!');
+  if(folderId) loadDriveFiles();
 }
 function setStatus(t,m){document.getElementById('status-dot').className='dot '+t;document.getElementById('status-text').textContent=m;}
 function setCloudPill(on){const e=document.getElementById('cloud-pill');e.className='cloud-pill '+(on?'on':'off');e.textContent=on?'☁ Cloud':'💾 Local';}
 function copyScript(){navigator.clipboard.writeText(document.getElementById('script-pre').textContent).then(()=>showToast('📋 Copied!'));}
 
-// ── MODAL ────────────────────────────────────────────────────────────────────
+// ── MODAL ─────────────────────────────────────────────────────────────────────
 function showModal(icon,title,desc,label,fn){
   document.getElementById('modal-icon').textContent=icon;
   document.getElementById('modal-title').textContent=title;
@@ -621,16 +938,17 @@ function showModal(icon,title,desc,label,fn){
 function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
 function runModalFn(){closeModal();_modalFn();}
 document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')closeModal();});
+document.getElementById('preview-overlay').addEventListener('click',e=>{if(e.target.id==='preview-overlay')closePreview();});
 
-// ── UTILS ────────────────────────────────────────────────────────────────────
-function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):''}
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'):''}
 function now(){const d=new Date();return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 let _tt;
 function showToast(msg,isError=false,isWarn=false){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className=isError?'error':isWarn?'warn':'';
   requestAnimationFrame(()=>t.classList.add('show'));
-  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3000);
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3200);
 }
 </script>
 </body>
