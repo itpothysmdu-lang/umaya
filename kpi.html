@@ -3,640 +3,920 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pothys IT Management — Madurai Branch</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Fund Transfer Reconciliation Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-:root{--bg:#0a0c14;--surface:#111520;--surface2:#161b2e;--border:#1e2640;--border2:#252d4a;--accent:#e8a020;--accent2:#f4c060;--accent-dim:rgba(232,160,32,0.12);--accent-glow:rgba(232,160,32,0.25);--blue:#4a9eff;--blue-dim:rgba(74,158,255,0.1);--green:#3ecf8e;--green-dim:rgba(62,207,142,0.1);--red:#f87171;--purple:#a78bfa;--text:#e8eaf0;--text2:#8890aa;--text3:#5a6380;--radius:12px;--radius2:8px;--font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'JetBrains Mono',monospace;--shadow:0 4px 24px rgba(0,0,0,0.5)}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;min-height:100vh;overflow-x:hidden}
-.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
-.sidebar-logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
-.logo-mark{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#0a0c14;font-family:var(--font-head);box-shadow:0 0 20px var(--accent-glow)}
-.logo-text .brand{font-family:var(--font-head);font-size:15px;font-weight:700}
-.logo-text .sub{font-size:11px;color:var(--text3)}
-.logo-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:var(--font-mono);cursor:pointer;margin-top:6px;border:1px solid;transition:all .2s}
-.badge-ok{background:var(--green-dim);color:var(--green);border-color:rgba(62,207,142,0.3)}
-.badge-warn{background:var(--accent-dim);color:var(--accent);border-color:rgba(232,160,32,0.3)}
-.badge-err{background:rgba(248,113,113,0.1);color:var(--red);border-color:rgba(248,113,113,0.3)}
-.sidebar-nav{flex:1;overflow-y:auto;padding:16px 10px}
-.nav-section{margin-bottom:20px}
-.nav-label{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;padding:0 10px;margin-bottom:8px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius2);cursor:pointer;transition:all .2s;color:var(--text2);font-size:13.5px;margin-bottom:2px}
-.nav-item:hover{background:var(--surface2);color:var(--text)}
-.nav-item.active{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(232,160,32,0.2)}
-.nav-item .icon{font-size:15px;width:20px;text-align:center}
-.n-badge{margin-left:auto;background:var(--accent);color:#0a0c14;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;font-family:var(--font-mono)}
-.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
-.main{margin-left:240px;min-height:100vh}
-.topbar{position:sticky;top:0;z-index:50;background:rgba(10,12,20,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:14px}
-.topbar-title{font-family:var(--font-head);font-size:18px;font-weight:700;flex:1}
-.topbar-title span{color:var(--accent)}
-.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--radius2);font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .2s;font-family:var(--font-body)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
-.btn-ghost:hover:not(:disabled){color:var(--text);border-color:var(--text3)}
-.btn-primary{background:var(--accent);color:#0a0c14;font-weight:600;box-shadow:0 0 16px var(--accent-glow)}
-.btn-primary:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px)}
-.btn-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(74,158,255,0.25)}
-.btn-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.25)}
-.btn-red{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2);font-size:12px;padding:5px 10px}
-.btn-sm{padding:5px 10px;font-size:12px}
-.page{display:none;padding:28px}
-.page.active{display:block;animation:fadeIn .3s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
-.page-title{font-family:var(--font-head);font-size:22px;font-weight:800}
-.page-title span{color:var(--accent)}
-.page-sub{font-size:13px;color:var(--text3);margin-top:4px}
-.row{display:flex;align-items:center;gap:10px}
-.ml-auto{margin-left:auto}
-/* dash */
-.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:all .25s}
-.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow)}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.stat-card.gold::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
-.stat-card.blue::before{background:linear-gradient(90deg,var(--blue),#7ec8ff)}
-.stat-card.green::before{background:linear-gradient(90deg,var(--green),#7fffcb)}
-.stat-card.purple::before{background:linear-gradient(90deg,var(--purple),#c4b5fd)}
-.stat-icon{font-size:22px;margin-bottom:12px}
-.stat-val{font-family:var(--font-head);font-size:32px;font-weight:800;line-height:1;margin-bottom:4px}
-.stat-label{color:var(--text2);font-size:12.5px}
-.stat-sub{font-size:11px;color:var(--text3);margin-top:8px;font-family:var(--font-mono)}
-.stat-card.gold .stat-val{color:var(--accent2)}
-.stat-card.blue .stat-val{color:var(--blue)}
-.stat-card.green .stat-val{color:var(--green)}
-.stat-card.purple .stat-val{color:var(--purple)}
-.inv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
-.inv-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;display:flex;align-items:center;gap:14px;transition:all .2s}
-.inv-card:hover{border-color:var(--border2);box-shadow:0 2px 12px rgba(0,0,0,.3)}
-.inv-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.inv-info{flex:1}
-.inv-name{font-weight:500;font-size:13px;color:var(--text);margin-bottom:3px}
-.inv-count{font-family:var(--font-head);font-size:24px;font-weight:700;line-height:1}
-/* form */
-.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
-.form-header{padding:18px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.form-header-icon{width:36px;height:36px;border-radius:8px;background:var(--accent-dim);border:1px solid rgba(232,160,32,0.2);display:flex;align-items:center;justify-content:center;font-size:16px}
-.form-header-title{font-family:var(--font-head);font-size:15px;font-weight:700}
-.form-header-sub{font-size:12px;color:var(--text3)}
-.form-body{padding:24px}
-.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.field{display:flex;flex-direction:column;gap:6px}
-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
-input,select,textarea{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;color:var(--text);font-family:var(--font-body);font-size:13.5px;outline:none;transition:all .2s;width:100%}
-input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-input::placeholder{color:var(--text3)}
-select option{background:var(--surface2)}
-.sect{grid-column:1/-1;font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:8px;margin-top:4px}
-.sect::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(232,160,32,0.3),transparent)}
-.form-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;background:rgba(0,0,0,.15)}
-/* table */
-.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.table-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.search-box{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:8px 14px;flex:1}
-.search-box input{background:none;border:none;padding:0;font-size:13px}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-thead tr{background:rgba(0,0,0,.2)}
-th{padding:11px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:rgba(255,255,255,.02)}
-.td-p{color:var(--text);font-weight:500}
-.td-m{font-family:var(--font-mono);font-size:12px;color:var(--blue)}
-.table-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text3);background:rgba(0,0,0,.1)}
-/* config */
-.config-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px}
-.config-title{font-family:var(--font-head);font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.conn-box{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--radius2);margin-top:14px;font-size:13px;border:1px solid}
-.conn-ok{background:var(--green-dim);border-color:rgba(62,207,142,.25);color:var(--green)}
-.conn-err{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.25);color:var(--red)}
-.conn-idle{background:var(--surface2);border-color:var(--border2);color:var(--text3)}
-/* toast */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border-radius:var(--radius);padding:14px 20px;min-width:300px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow);transform:translateX(120%);transition:transform .35s cubic-bezier(.4,0,.2,1);z-index:999;border:1px solid var(--border2)}
-.toast.show{transform:translateX(0)}
-.t-icon{font-size:18px;margin-top:1px}
-.t-title{font-weight:600;font-size:13px}
-.t-sub{font-size:11.5px;color:var(--text3);margin-top:2px}
-/* overlay */
-.overlay{position:fixed;inset:0;background:rgba(10,12,20,.8);backdrop-filter:blur(4px);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px}
-.overlay.show{display:flex}
-.spinner{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.overlay-msg{color:var(--text2);font-size:13px;font-family:var(--font-mono)}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+  :root{
+    --navy:#1F4E78; --navy-dark:#123049; --red-bg:#FFC7CE; --red-txt:#9C0006;
+    --green-bg:#E2EFDA; --green-txt:#375623; --grey:#f4f6f8; --border:#d9dee3;
+    --page-bg:#fafbfc; --card-bg:#fff; --text-main:#222; --text-sub:#666;
+    --label-bg:#eef2f5; --hover-bg:#eef4f9; --dropzone-bg:#f7fafc; --totalrow-bg:#dde6ee;
+    --heading-txt:#123049; --muted-txt:#aaa; --disabled-bg:#b7c3cd; --detail-bg:#fbfcfd;
+  }
+  [data-theme="dark"]{
+    --navy:#3d7ab5; --navy-dark:#295a86; --red-bg:#4a2020; --red-txt:#ff8a8a;
+    --green-bg:#1e3a24; --green-txt:#8fd39f; --grey:#1c2740; --border:#2e3f60;
+    --page-bg:#0c1220; --card-bg:#161e2e; --text-main:#e7ecf3; --text-sub:#9fb0c8;
+    --label-bg:#1c2740; --hover-bg:#20304d; --dropzone-bg:#182234; --totalrow-bg:#233252;
+    --heading-txt:#7ec4f0; --muted-txt:#7d8aa3; --disabled-bg:#334159; --detail-bg:#101828;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:Calibri,Arial,sans-serif;margin:0;padding:24px;background:var(--page-bg);color:var(--text-main);transition:background .15s,color .15s;}
+  h1{font-size:22px;color:var(--heading-txt);margin:0 0 4px;}
+  .sub{color:var(--text-sub);font-size:13px;margin-bottom:20px;}
+  .card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;}
+  .dropzone{border:2px dashed var(--navy);border-radius:8px;padding:36px;text-align:center;cursor:pointer;background:var(--dropzone-bg);transition:background .15s;}
+  .dropzone:hover{background:var(--hover-bg);}
+  .dropzone.drag{background:var(--hover-bg);}
+  .dropzone p{margin:6px 0;color:var(--text-main);}
+  .dropzone .hint{font-size:12px;color:var(--text-sub);}
+  input[type=file]{display:none;}
+  button{background:var(--navy);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;}
+  button:hover{background:var(--navy-dark);}
+  button.secondary{background:var(--card-bg);color:var(--heading-txt);border:1px solid var(--heading-txt);}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  table{border-collapse:collapse;width:100%;font-size:12px;}
+  th,td{border:1px solid var(--border);padding:5px 7px;text-align:right;white-space:nowrap;}
+  th{background:var(--navy);color:#fff;position:sticky;top:0;}
+  td.label,th.label{text-align:left;position:sticky;left:0;background:var(--label-bg);font-weight:600;z-index:2;}
+  th.label{background:var(--navy);color:#fff;z-index:3;}
+  .matrix-wrap{overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:6px;}
+  .mismatch{background:var(--red-bg);color:var(--red-txt);font-weight:600;}
+  .zero{color:var(--muted-txt);}
+  .totalrow td, .totalrow th{background:var(--totalrow-bg);font-weight:700;}
+  .totalcol{background:var(--totalrow-bg);font-weight:700;}
+  #error{color:var(--red-txt);background:var(--red-bg);padding:10px 14px;border-radius:6px;margin-bottom:14px;display:none;}
+  #summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .stat{background:var(--grey);border:1px solid var(--border);border-radius:8px;padding:12px 18px;min-width:160px;}
+  .stat .num{font-size:20px;font-weight:700;color:var(--heading-txt);}
+  .stat .lbl{font-size:12px;color:var(--text-sub);}
+  details summary{cursor:pointer;font-weight:600;color:var(--heading-txt);margin-bottom:8px;}
+  .mismatch-list{font-size:13px;}
+  .mismatch-list li{margin-bottom:4px;}
+  .badge{display:inline-block;background:var(--navy);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:8px;}
+  .ledger-item{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;}
+  .ledger-item:last-child{border-bottom:none;}
+  .ledger-item:hover{background:var(--hover-bg);}
+  .ledger-item.active{background:var(--navy);color:#fff;}
+  .ledger-item .sub{font-size:11px;color:var(--text-sub);}
+  .ledger-item.active .sub{color:#dce8f2;}
+  .ledger-item .mismatch-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C0392B;margin-right:6px;}
+  .ledger-item.active .mismatch-dot{background:#ffb3b3;}
+  button:disabled{background:var(--disabled-bg);cursor:not-allowed;}
+  #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .login-box{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:36px 40px;width:320px;box-shadow:0 4px 18px rgba(0,0,0,.06);}
+  .login-box h2{margin:0 0 4px;color:var(--heading-txt);font-size:19px;}
+  .login-box .sub{margin-bottom:20px;}
+  .login-box label{display:block;font-size:12px;color:var(--text-sub);margin:12px 0 4px;}
+  .login-box input[type=text],.login-box input[type=password]{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--card-bg);color:var(--text-main);}
+  .login-box button{width:100%;margin-top:18px;padding:10px;}
+  #loginError{color:var(--red-txt);background:var(--red-bg);padding:8px 10px;border-radius:6px;font-size:12px;margin-top:12px;display:none;}
+  #logoutBar{display:flex;justify-content:flex-end;margin-bottom:6px;}
+  #logoutBar button{font-size:12px;padding:5px 12px;}
+
+  /* ── floating nav (Home / Back) ── */
+  .floating-nav{position:fixed;top:14px;left:14px;z-index:10000;display:flex;gap:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:30px;padding:6px 8px;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  .floating-nav button{background:transparent;color:var(--heading-txt);border:none;padding:6px 10px;font-size:12px;border-radius:20px;display:flex;align-items:center;gap:4px;}
+  .floating-nav button:hover{background:var(--hover-bg);}
+  [data-theme="dark"] .floating-nav button{color:var(--text-main);}
+
+  /* ── theme toggle (bottom-right) ── */
+  .theme-toggle-corner{position:fixed;bottom:14px;right:14px;z-index:10000;display:flex;gap:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:30px;padding:6px 8px;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  .theme-toggle-corner button{background:transparent;color:var(--heading-txt);border:none;padding:6px 10px;font-size:12px;border-radius:20px;display:flex;align-items:center;gap:4px;}
+  .theme-toggle-corner button:hover{background:var(--hover-bg);}
+  [data-theme="dark"] .theme-toggle-corner button{color:var(--text-main);}
+
+  /* ── logo badge (bottom-left) ── */
+  .logo-badge{position:fixed;bottom:14px;left:14px;z-index:10000;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--navy-dark),var(--navy));color:#fff;border-radius:30px;padding:8px 14px 8px 10px;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:12px;}
+  .logo-badge .crown{font-size:16px;line-height:1;}
+  .logo-badge .initials{font-weight:800;font-size:14px;letter-spacing:.5px;}
+  .logo-badge .who{font-size:9px;color:#cfe0ee;line-height:1.1;}
 </style>
 </head>
 <body>
 
-<div class="overlay" id="overlay">
-  <div class="spinner"></div>
-  <div class="overlay-msg" id="overlay-msg">Saving to Google Sheets…</div>
+<div class="floating-nav">
+  <button onclick="location.href='./Pothys Reconciliation Hub.html'" title="Go to Hub">🏠 Home</button>
+  <button onclick="history.back()" title="Go back">← Back</button>
+</div>
+<div class="theme-toggle-corner">
+  <button onclick="setTheme('light')" title="Light mode">☀️ Light</button>
+  <button onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+</div>
+<div class="logo-badge">
+  <span class="crown">👑</span>
+  <span><span class="initials">SK</span><br><span class="who">Karthick</span></span>
 </div>
 
-<!-- SIDEBAR -->
-<nav class="sidebar">
-  <div class="sidebar-logo">
-    <div class="logo-mark">
-      <div class="logo-icon">P</div>
-      <div class="logo-text"><div class="brand">Pothys IT</div><div class="sub">Madurai Branch</div></div>
-    </div>
-    <div class="logo-badge badge-warn" id="conn-badge" onclick="showPage('settings',null)">
-      <span id="conn-dot">🟡</span><span id="conn-label">Configure Sheet</span>
-    </div>
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>Fund Transfer Reconciliation Portal</h2>
+    <div class="sub" style="font-size:12px;">Sign in to continue</div>
+    <label for="loginUser">Username</label>
+    <input type="text" id="loginUser" autocomplete="username">
+    <label for="loginPass">Password</label>
+    <input type="password" id="loginPass" autocomplete="current-password">
+    <div id="loginError">Invalid username or password.</div>
+    <button id="loginBtn">Sign In</button>
   </div>
-  <div class="sidebar-nav">
-    <div class="nav-section">
-      <div class="nav-label">Overview</div>
-      <div class="nav-item active" onclick="showPage('dashboard',this)"><span class="icon">📊</span>Dashboard</div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-label">Management</div>
-      <div class="nav-item" onclick="showPage('input',this)"><span class="icon">➕</span>Add / Update Entry<span class="n-badge">NEW</span></div>
-      <div class="nav-item" onclick="showPage('records',this)"><span class="icon">📋</span>All Records</div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-label">Reports</div>
-      <div class="nav-item" onclick="showPage('report',this)"><span class="icon">📈</span>Summary Report</div>
-    </div>
-    <div class="nav-section">
-      <div class="nav-label">Setup</div>
-      <div class="nav-item" onclick="showPage('settings',this)"><span class="icon">⚙️</span>Sheet Settings</div>
-    </div>
-  </div>
-  <div class="sidebar-footer">IT Management System v2.0<br><span style="color:var(--accent)">Pothys Retail Pvt Ltd</span></div>
-</nav>
-
-<!-- MAIN -->
-<main class="main">
-  <div class="topbar">
-    <div class="topbar-title">IT Asset & Support <span>Management</span></div>
-    <div class="row">
-      <button class="btn btn-ghost btn-sm" onclick="syncDashboard()">🔄 Sync</button>
-      <button class="btn btn-primary" onclick="showPage('input',null)">+ New Entry</button>
-    </div>
-  </div>
-
-  <!-- ══ DASHBOARD ══ -->
-  <div class="page active" id="page-dashboard">
-    <div class="page-header">
-      <div><div class="page-title">IT Asset <span>Dashboard</span></div><div class="page-sub">Live from Google Sheets — Pothys Retail, Madurai Branch</div></div>
-      <button class="btn btn-ghost btn-sm" onclick="syncDashboard()">↻ Refresh Data</button>
-    </div>
-    <div class="dash-grid">
-      <div class="stat-card gold"><div class="stat-icon">👥</div><div class="stat-val" id="s-users">—</div><div class="stat-label">Total Users</div><div class="stat-sub">User sheet</div></div>
-      <div class="stat-card blue"><div class="stat-icon">🖥️</div><div class="stat-val" id="s-sys">—</div><div class="stat-label">Total Systems</div><div class="stat-sub">Win + Linux + Server</div></div>
-      <div class="stat-card green"><div class="stat-icon">🖨️</div><div class="stat-val" id="s-prn">—</div><div class="stat-label">Total Printers</div><div class="stat-sub">All printer types</div></div>
-      <div class="stat-card purple"><div class="stat-icon">🌐</div><div class="stat-val" id="s-net">—</div><div class="stat-label">Network Devices</div><div class="stat-sub">Switch + Router</div></div>
-    </div>
-    <div class="inv-grid" id="inv-grid"></div>
-  </div>
-
-  <!-- ══ INPUT FORM ══ -->
-  <div class="page" id="page-input">
-    <div class="page-header">
-      <div><div class="page-title">Add / Update <span>Entry</span></div><div class="page-sub">All filled sections save to their respective Google Sheet tabs automatically</div></div>
-    </div>
-
-    <div class="form-card">
-      <div class="form-header"><div class="form-header-icon">👤</div><div><div class="form-header-title">User & Location</div><div class="form-header-sub">→ Sheets: User · Division · Location No's</div></div></div>
-      <div class="form-body"><div class="form-grid">
-        <div class="field"><label>Employee / User Name *</label><input type="text" id="f_user" placeholder="e.g. Ramesh Kumar"/></div>
-        <div class="field"><label>Employee ID</label><input type="text" id="f_empid" placeholder="e.g. PTH-2024-001"/></div>
-        <div class="field"><label>Division *</label><select id="f_division"><option value="">— Select Division —</option><option>Retail Floor</option><option>Billing &amp; Accounts</option><option>Warehouse &amp; Logistics</option><option>HR &amp; Admin</option><option>IT Department</option><option>Management</option><option>Security</option><option>Maintenance</option></select></div>
-        <div class="field"><label>Location No</label><input type="text" id="f_location" placeholder="e.g. FL-001"/></div>
-        <div class="field"><label>Floor / Zone</label><select id="f_floor"><option value="">— Select —</option><option>Ground Floor</option><option>First Floor</option><option>Second Floor</option><option>Third Floor</option><option>Basement</option><option>Server Room</option></select></div>
-        <div class="field"><label>Contact / Extension</label><input type="text" id="f_contact" placeholder="+91 9XXXXXXXXX"/></div>
-      </div></div>
-    </div>
-
-    <div class="form-card">
-      <div class="form-header"><div class="form-header-icon">🖥️</div><div><div class="form-header-title">System Details</div><div class="form-header-sub">→ Sheets: Linux System No's · Windows System OS · Server OS System</div></div></div>
-      <div class="form-body"><div class="form-grid">
-        <div class="sect">🐧 Linux</div>
-        <div class="field"><label>Linux System No</label><input type="text" id="f_linux_no" placeholder="LX-001"/></div>
-        <div class="field"><label>Distro</label><select id="f_linux_os"><option value="">— Select —</option><option>Ubuntu 22.04 LTS</option><option>Ubuntu 20.04 LTS</option><option>CentOS 7</option><option>Debian 12</option><option>Red Hat Enterprise</option></select></div>
-        <div class="field"><label>Asset Tag</label><input type="text" id="f_linux_tag" placeholder="PTH-LX-0042"/></div>
-        <div class="sect">🪟 Windows</div>
-        <div class="field"><label>Windows System No</label><input type="text" id="f_win_no" placeholder="WN-001"/></div>
-        <div class="field"><label>Windows OS</label><select id="f_win_os"><option value="">— Select —</option><option>Windows 11 Pro</option><option>Windows 11 Home</option><option>Windows 10 Pro</option><option>Windows 10 LTSC</option><option>Windows 7 (Legacy)</option></select></div>
-        <div class="field"><label>Asset Tag</label><input type="text" id="f_win_tag" placeholder="PTH-WN-0101"/></div>
-        <div class="sect">🗄️ Server</div>
-        <div class="field"><label>Server No</label><input type="text" id="f_srv_no" placeholder="SRV-001"/></div>
-        <div class="field"><label>Server OS</label><select id="f_srv_os"><option value="">— Select —</option><option>Windows Server 2022</option><option>Windows Server 2019</option><option>Ubuntu Server 22.04</option><option>CentOS Stream 9</option><option>VMware ESXi</option></select></div>
-        <div class="field"><label>Server Role</label><select id="f_srv_role"><option value="">— Select —</option><option>Domain Controller</option><option>File Server</option><option>Database Server</option><option>Web / App Server</option><option>Backup Server</option></select></div>
-      </div></div>
-    </div>
-
-    <div class="form-card">
-      <div class="form-header"><div class="form-header-icon">🖨️</div><div><div class="form-header-title">Printers &amp; Scanners</div><div class="form-header-sub">→ Sheets: Thermal · Barcode · Ink · Cheque · Doc Scanner · Xerox · Mobile Scanner</div></div></div>
-      <div class="form-body"><div class="form-grid">
-        <div class="sect">🧾 Thermal Printers</div>
-        <div class="field"><label>Printer No</label><input type="text" id="f_tp_no" placeholder="TP-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_tp_model" placeholder="Epson TM-T82"/></div>
-        <div class="field"><label>Status</label><select id="f_tp_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
-        <div class="sect">📦 Barcode Printers</div>
-        <div class="field"><label>Printer No</label><input type="text" id="f_bc_no" placeholder="BC-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_bc_model" placeholder="Zebra ZT230"/></div>
-        <div class="field"><label>Status</label><select id="f_bc_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
-        <div class="sect">💧 Ink Printers</div>
-        <div class="field"><label>Printer No</label><input type="text" id="f_ip_no" placeholder="IP-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_ip_model" placeholder="HP DeskJet 2723"/></div>
-        <div class="field"><label>Status</label><select id="f_ip_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
-        <div class="sect">💳 Cheque Printers</div>
-        <div class="field"><label>Printer No</label><input type="text" id="f_cp_no" placeholder="CP-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_cp_model" placeholder="TVSE MSP 250"/></div>
-        <div class="field"><label>Status</label><select id="f_cp_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
-        <div class="sect">📄 Doc Scanners</div>
-        <div class="field"><label>Scanner No</label><input type="text" id="f_ds_no" placeholder="DS-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_ds_model" placeholder="Epson DS-530"/></div>
-        <div class="field"><label>Type</label><select id="f_ds_type"><option>Flatbed</option><option>ADF</option><option>Sheet-fed</option></select></div>
-        <div class="sect">📠 Xerox / MFP</div>
-        <div class="field"><label>Machine No</label><input type="text" id="f_xm_no" placeholder="XM-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_xm_model" placeholder="Xerox WC 3345"/></div>
-        <div class="field"><label>Status</label><select id="f_xm_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
-        <div class="sect">📱 Mobile Scanners</div>
-        <div class="field"><label>Scanner No</label><input type="text" id="f_ms_no" placeholder="MS-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_ms_model" placeholder="Zebra TC21"/></div>
-        <div class="field"><label>Status</label><select id="f_ms_status"><option>Active</option><option>In Repair</option><option>Inactive</option></select></div>
-      </div></div>
-    </div>
-
-    <div class="form-card">
-      <div class="form-header"><div class="form-header-icon">🌐</div><div><div class="form-header-title">Network &amp; Internet</div><div class="form-header-sub">→ Sheets: Switch · Router · Internet Provider</div></div></div>
-      <div class="form-body"><div class="form-grid">
-        <div class="sect">🔀 Switches</div>
-        <div class="field"><label>Switch No</label><input type="text" id="f_sw_no" placeholder="SW-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_sw_model" placeholder="Cisco SG300-28"/></div>
-        <div class="field"><label>Ports</label><select id="f_sw_ports"><option>8 Port</option><option>16 Port</option><option>24 Port</option><option>48 Port</option></select></div>
-        <div class="sect">📡 Routers</div>
-        <div class="field"><label>Router No</label><input type="text" id="f_rt_no" placeholder="RT-001"/></div>
-        <div class="field"><label>Model</label><input type="text" id="f_rt_model" placeholder="TP-Link ER605"/></div>
-        <div class="field"><label>WAN IP</label><input type="text" id="f_rt_ip" placeholder="203.0.113.10"/></div>
-        <div class="sect">🌐 Internet Provider</div>
-        <div class="field"><label>ISP Name</label><select id="f_isp"><option value="">— Select ISP —</option><option>BSNL</option><option>Airtel</option><option>JioFiber</option><option>ACT Fibernet</option><option>Vodafone Idea</option><option>Tata Communications</option></select></div>
-        <div class="field"><label>Plan / Speed</label><input type="text" id="f_isp_plan" placeholder="100 Mbps Leased"/></div>
-        <div class="field"><label>Account / Circuit ID</label><input type="text" id="f_isp_id" placeholder="BSNL-MDU-00421"/></div>
-      </div></div>
-    </div>
-
-    <div class="form-card">
-      <div class="form-footer">
-        <div style="font-size:12px;color:var(--text3)">Entry: <span style="color:var(--text);font-family:var(--font-mono)" id="entry-date"></span></div>
-        <div class="ml-auto row">
-          <button class="btn btn-ghost" onclick="clearForm()">✕ Clear</button>
-          <button class="btn btn-primary" id="save-btn" onclick="submitForm()">📗 Save to Google Sheets</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ RECORDS ══ -->
-  <div class="page" id="page-records">
-    <div class="page-header">
-      <div><div class="page-title">All <span>Records</span></div><div class="page-sub">Live from Google Sheets — choose sheet tab below</div></div>
-      <div class="row">
-        <select id="rec-sheet-sel" onchange="loadRecords()" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius2);padding:8px 14px;color:var(--text);font-size:13px">
-          <option value="USER">User</option><option value="WINDOWS">Windows Systems</option><option value="LINUX">Linux Systems</option>
-          <option value="SERVER">Servers</option><option value="THERMAL">Thermal Printers</option><option value="BARCODE">Barcode Printers</option>
-          <option value="INK">Ink Printers</option><option value="CHEQUE">Cheque Printers</option><option value="DOC_SCANNER">Doc Scanners</option>
-          <option value="XEROX">Xerox Machines</option><option value="MOBILE_SCANNER">Mobile Scanners</option>
-          <option value="SWITCH">Switches</option><option value="ROUTER">Routers</option><option value="ISP">Internet Providers</option>
-        </select>
-        <button class="btn btn-ghost btn-sm" onclick="loadRecords()">🔄 Refresh</button>
-      </div>
-    </div>
-    <div class="table-card">
-      <div class="table-header">
-        <div class="search-box"><span>🔍</span><input type="text" placeholder="Search records…" oninput="searchRecords(this.value)"/></div>
-        <span style="font-size:12px;color:var(--text3)" id="rec-count">—</span>
-      </div>
-      <div class="table-wrap"><table id="rec-table"><thead id="rec-thead"></thead><tbody id="rec-tbody"><tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3)">Select a sheet and click Refresh</td></tr></tbody></table></div>
-      <div class="table-footer"><span id="rec-footer">—</span></div>
-    </div>
-  </div>
-
-  <!-- ══ REPORT ══ -->
-  <div class="page" id="page-report">
-    <div class="page-header">
-      <div><div class="page-title">Summary <span>Report</span></div><div class="page-sub">Total record counts per sheet tab — live from Google Sheets</div></div>
-      <button class="btn btn-ghost btn-sm" onclick="loadReport()">🔄 Refresh</button>
-    </div>
-    <div class="table-card">
-      <div class="table-header" style="font-family:var(--font-head);font-weight:700;font-size:15px">📊 Record Count by Sheet</div>
-      <div class="table-wrap">
-        <table><thead><tr><th>#</th><th>Key</th><th>Sheet Tab Name</th><th>Records</th></tr></thead>
-        <tbody id="report-body"><tr><td colspan="4" style="text-align:center;padding:32px;color:var(--text3)">Click Refresh to load</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ SETTINGS ══ -->
-  <div class="page" id="page-settings">
-    <div class="page-header">
-      <div><div class="page-title">Google Sheets <span>Setup</span></div><div class="page-sub">Connect this app to your Google Sheet via Apps Script Web App</div></div>
-    </div>
-
-    <div class="config-panel">
-      <div class="config-title">📌 Step-by-Step Setup</div>
-      <ol style="color:var(--text2);font-size:13.5px;line-height:2.2;padding-left:20px">
-        <li>Open your <strong style="color:var(--text)">Google Sheet</strong> → <strong style="color:var(--text)">Extensions → Apps Script</strong></li>
-        <li>Delete any existing code. Paste the full <code style="color:var(--accent);background:var(--bg);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">Code.gs</code> provided</li>
-        <li>In the editor, select function <code style="color:var(--accent);background:var(--bg);padding:2px 8px;border-radius:4px;font-family:var(--font-mono)">setupAllSheets</code> → click <strong style="color:var(--green)">▶ Run</strong> (one time only — creates all 16 tabs)</li>
-        <li>Click <strong style="color:var(--text)">Deploy → New Deployment</strong></li>
-        <li>Type: <strong style="color:var(--green)">Web App</strong> | Execute as: <strong style="color:var(--green)">Me</strong> | Access: <strong style="color:var(--green)">Anyone</strong></li>
-        <li>Click <strong style="color:var(--text)">Deploy</strong> → copy the <strong style="color:var(--accent)">Web App URL</strong></li>
-        <li>Paste the URL below and click <strong style="color:var(--green)">Test Connection</strong>, then <strong style="color:var(--green)">Save &amp; Connect</strong></li>
-      </ol>
-    </div>
-
-    <div class="config-panel">
-      <div class="config-title">🔗 Apps Script Web App URL</div>
-      <div class="field">
-        <label>Web App URL (from Deploy step)</label>
-        <input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/AKfyc.../exec"/>
-      </div>
-      <div class="conn-box conn-idle" id="conn-box">
-        <span>⬤</span><span id="conn-msg">Not tested yet — enter URL above and click Test Connection.</span>
-      </div>
-      <div class="row" style="margin-top:14px">
-        <button class="btn btn-blue" onclick="testConnection()">🔌 Test Connection</button>
-        <button class="btn btn-primary" onclick="saveSettings()">💾 Save &amp; Connect</button>
-      </div>
-    </div>
-
-    <div class="config-panel">
-      <div class="config-title">📋 All 16 Sheet Tabs (auto-created by setupAllSheets)</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 User</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Division</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Location No's</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Linux System No's</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Windows System OS</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Server OS System</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Thermal Printers</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Barcode Printer No's</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Ink Printer</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Cheque Printer</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Doc Scanner</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Xerox Machine</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Mobile Scanner</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Switch</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Router</div>
-        <div style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius2);padding:10px 14px;font-size:12px;color:var(--text2)">📗 Internet Provider</div>
-      </div>
-    </div>
-  </div>
-</main>
-
-<!-- TOAST -->
-<div class="toast" id="toast">
-  <div class="t-icon" id="t-icon">✅</div>
-  <div><div class="t-title" id="t-title"></div><div class="t-sub" id="t-sub"></div></div>
 </div>
+
+<div id="mainApp" style="display:none;">
+<div id="logoutBar"><button class="secondary" id="logoutBtn">Log out</button></div>
+<h1>Fund Transfer Reconciliation Portal</h1>
+<div class="sub">Upload a Data extract (same columns as the "Data" tab of your Fund Transfer workbook), then start the reconciliation &mdash; no formulas to maintain.</div>
+
+<div class="card">
+  <div class="dropzone" id="dropzone">
+    <p><strong>Click to choose a file</strong> or drag &amp; drop it here</p>
+    <p class="hint">.xlsx, .xls or .csv &mdash; must contain columns: Amount in Local Currency, Segment, G/L Account, GL Description</p>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+  </div>
+  <div id="error"></div>
+  <div id="fileInfo" style="margin-top:10px;font-size:13px;color:var(--text-sub);"></div>
+  <div class="toolbar" style="margin-top:14px;">
+    <button id="reconcileBtn" disabled>Start Reconciliation</button>
+    <button class="secondary" id="clearFileBtn">Clear file</button>
+  </div>
+</div>
+
+<div id="results" style="display:none;">
+  <div id="summary"></div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Share with your accountant</strong>
+      <button id="downloadExcel">Download Full Excel Report</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);">One workbook, one sheet per Fund Transfer ledger (18 in total) &mdash; each with that ledger's summary table and the exact break transactions underneath it &mdash; plus a Matrix sheet for a quick overview.</div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Reconciliation Matrix</strong>
+      <span class="badge" id="matrixBadge"></span>
+      <button class="secondary" id="downloadCsv">Download Matrix as CSV</button>
+      <button class="secondary" id="clearBtn">Upload a different file</button>
+    </div>
+    <div class="matrix-wrap"><table id="matrixTable"></table></div>
+  </div>
+
+  <div class="card">
+    <strong>Top Mismatches</strong>
+    <ol class="mismatch-list" id="mismatchList" style="margin-top:10px;"></ol>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Fund Transfer Ledgers</strong>
+      <span class="badge" id="perLedgerBadge"></span>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:10px;">Click a ledger in the list to view its reconciliation summary &mdash; same as picking it from the dropdown in your Excel file, one at a time.</div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+      <div id="ledgerList" style="width:280px;flex-shrink:0;border:1px solid var(--border);border-radius:6px;max-height:560px;overflow:auto;"></div>
+      <div id="ledgerDetailPane" style="flex:1;min-width:320px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Ledger / Branch mapping used (click to view or verify)</summary>
+      <div id="mappingTables"></div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:8px;">Source: Fund Transfer.xlsx &ndash; Summary sheet master tables (T6:W23 and B7:C23), captured 18-Jul-2026. If new branches or FT ledgers are added, this script's embedded list must be updated to include them.</div>
+    </details>
+  </div>
+</div>
+</div><!-- /mainApp -->
 
 <script>
-// ══════════════════════════════
-//  GOOGLE APPS SCRIPT URL
-// ══════════════════════════════
-let GAS_URL = localStorage.getItem("pothys_gas_url") || "";
+// ---- theme ----
+function setTheme(mode){
+  document.documentElement.dataset.theme = mode;
+  localStorage.setItem('ft_theme', mode);
+}
+(function initTheme(){
+  setTheme(localStorage.getItem('ft_theme') || 'light');
+})();
 
-const SHEET_NAMES = {
-  USER:"User", DIVISION:"Division", LOCATION:"Location No's",
-  LINUX:"Linux System No's", WINDOWS:"Windows System OS", SERVER:"Server OS System",
-  THERMAL:"Thermal Printers", BARCODE:"Barcode Printer No's", INK:"Ink Printer",
-  CHEQUE:"Cheque Printer", DOC_SCANNER:"Doc Scanner", XEROX:"Xerox Machine",
-  MOBILE_SCANNER:"Mobile Scanner", SWITCH:"Switch", ROUTER:"Router", ISP:"Internet Provider"
-};
+// ---- Master mapping (embedded from Summary!T6:W23 and Summary!B7:C23) ----
+const LEDGERS = [
+  ['10014200','FT - PRPL -CHE','Chennai','133001'],
+  ['10014207','FT - PRPL -MDU','Madurai','133050'],
+  ['10014208','FT - PRPL -TVM','Tiruvanandapuram','132001'],
+  ['10014209','FT - PRPL -EKM','Ernakulam','132000'],
+  ['10014211','FT - PRPL -NGL','Nagerkovil','133065'],
+  ['10014202','FT - PRPL -PDY','Pondy','134000'],
+  ['10014206','FT - PRPL -TRY','Trichy','133055'],
+  ['10014210','FT - PRPL -TVL','Tirunelveli','133060'],
+  ['10014219','FT - PRPL -PADI','Padi','133003'],
+  ['10014201','FT - PRPL -CHR','Chrompet','133002'],
+  ['10014203','FT - PRPL -CBE','Coimbatore','133040'],
+  ['10014204','FT - PRPL -SLM','Salem','133045'],
+  ['10014218','FT - PRPL -HO','HO','133000'],
+  ['10014222','FT - PRPL -Kanchi','Kancheepuram','133004'],
+  ['10014220','FT - PRPL -TPTY','Tirupathi','137000'],
+  ['10014205','FT - PRPL -BLR','Bangalore','129000'],
+  ['10014223','FT - PRPL -Sivakasi','Sivakasi','133051'],
+  ['10014221','FT - PRPL -MUM','Mumbai','127000'],
+]; // [ledgerNo, ledgerName, homeBranch, homeSegmentCode]
 
-// ── connection badge ──
-function setBadge(state){
-  const b=document.getElementById("conn-badge");
-  const d=document.getElementById("conn-dot");
-  const l=document.getElementById("conn-label");
-  if(state==="ok"){b.className="logo-badge badge-ok";d.textContent="🟢";l.textContent="Sheet Connected";}
-  else if(state==="err"){b.className="logo-badge badge-err";d.textContent="🔴";l.textContent="Connection Error";}
-  else{b.className="logo-badge badge-warn";d.textContent="🟡";l.textContent="Configure Sheet";}
+const BRANCHES = [
+  ['132001','Tiruvanandapuram'],['133000','HO'],['132000','Ernakulam'],
+  ['133060','Tirunelveli'],['134000','Pondy'],['133001','Chennai'],
+  ['133050','Madurai'],['133055','Trichy'],['133065','Nagerkovil'],
+  ['133004','Kancheepuram'],['133040','Coimbatore'],['133002','Chrompet'],
+  ['133045','Salem'],['133003','Padi'],['129000','Bangalore'],
+  ['127000','Mumbai'],['133051','Sivakasi'],['137000','Tirupathi'],
+]; // [segmentCode, branchName]
+
+const LEDGER_BY_DESC = {}; // GL Description -> home branch name (for VLOOKUP replication)
+LEDGERS.forEach(l => LEDGER_BY_DESC[l[1]] = l[2]);
+
+const LEDGER_BY_BRANCH = {}; // home branch name -> that branch's own ledger number (used for the self-reference guard)
+LEDGERS.forEach(l => LEDGER_BY_BRANCH[l[2]] = l[0]);
+
+const REQUIRED_COLS = ['Amount in Local Currency','Segment','G/L Account','GL Description'];
+const OPTIONAL_COLS = ['Document Number','Posting Date','Document Type','Text','Segment Name','Offsetting Account','Offset Account Description','Assignment','Clearing Document','Reversal Indicator'];
+let UPLOADED_HEADERS = []; // every column exactly as it appears in the uploaded file, in original order — used to export full, un-shrunk data
+
+function norm(x){ return (x===null||x===undefined) ? '' : String(x).trim(); }
+function fmt(n){
+  if (Math.abs(n) < 0.005) return '-';
+  return n.toLocaleString('en-IN', {maximumFractionDigits:0});
 }
 
-// ── API GET ──
-async function apiGet(params){
-  if(!GAS_URL) throw new Error("Apps Script URL not configured. Open Settings.");
-  const res = await fetch(GAS_URL+"?"+new URLSearchParams(params));
-  return res.json();
+function showError(msg){
+  const e = document.getElementById('error');
+  e.textContent = msg;
+  e.style.display = msg ? 'block' : 'none';
 }
 
-// ── API POST ──
-async function apiPost(payload){
-  if(!GAS_URL) throw new Error("Apps Script URL not configured. Open Settings.");
-  const res = await fetch(GAS_URL,{method:"POST",body:JSON.stringify(payload)});
-  return res.json();
-}
-
-// ── TEST CONNECTION ──
-async function testConnection(){
-  const url=(document.getElementById("cfg-url").value||"").trim();
-  if(!url){toast("Missing URL","Paste your Apps Script Web App URL first","err");return;}
-  const box=document.getElementById("conn-box");
-  const msg=document.getElementById("conn-msg");
-  box.className="conn-box conn-idle"; msg.textContent="Testing…";
-  try{
-    const r=await fetch(url+"?action=ping");
-    const d=await r.json();
-    if(d.status==="ok"){
-      box.className="conn-box conn-ok";
-      msg.textContent="✅ Connected! "+d.message+" · "+d.timestamp;
-    }else{
-      box.className="conn-box conn-err";
-      msg.textContent="❌ API error: "+(d.message||"unknown");
-    }
-  }catch(e){
-    box.className="conn-box conn-err";
-    msg.textContent="❌ "+e.message+" — check deployment & CORS settings";
-  }
-}
-
-// ── SAVE SETTINGS ──
-function saveSettings(){
-  const url=(document.getElementById("cfg-url").value||"").trim();
-  if(!url){toast("Missing","Enter the Web App URL","err");return;}
-  GAS_URL=url; localStorage.setItem("pothys_gas_url",url);
-  setBadge("ok");
-  toast("Saved ✓","Google Sheets connection configured");
-}
-
-// ── SUBMIT FORM ──
-async function submitForm(){
-  const user=document.getElementById("f_user").value.trim();
-  const div=document.getElementById("f_division").value;
-  if(!user){toast("Required","Enter Employee Name","err");return;}
-  if(!div){toast("Required","Select a Division","err");return;}
-  if(!GAS_URL){toast("Not Configured","Go to Settings and set the Sheet URL","err");return;}
-
-  showOverlay("Saving to Google Sheets…");
-  document.getElementById("save-btn").disabled=true;
-
-  const payload={
-    action:"insertFull",
-    data:{
-      user:{name:v("f_user"),empId:v("f_empid"),division:v("f_division"),locationNo:v("f_location"),floor:v("f_floor"),contact:v("f_contact")},
-      division:{name:v("f_division")},
-      linux:{no:v("f_linux_no"),distro:v("f_linux_os"),tag:v("f_linux_tag")},
-      windows:{no:v("f_win_no"),os:v("f_win_os"),tag:v("f_win_tag")},
-      server:{no:v("f_srv_no"),os:v("f_srv_os"),role:v("f_srv_role")},
-      thermal:{no:v("f_tp_no"),model:v("f_tp_model"),status:v("f_tp_status")},
-      barcode:{no:v("f_bc_no"),model:v("f_bc_model"),status:v("f_bc_status")},
-      ink:{no:v("f_ip_no"),model:v("f_ip_model"),status:v("f_ip_status")},
-      cheque:{no:v("f_cp_no"),model:v("f_cp_model"),status:v("f_cp_status")},
-      docScanner:{no:v("f_ds_no"),model:v("f_ds_model"),type:v("f_ds_type")},
-      xerox:{no:v("f_xm_no"),model:v("f_xm_model"),status:v("f_xm_status")},
-      mobileScanner:{no:v("f_ms_no"),model:v("f_ms_model"),status:v("f_ms_status")},
-      networkSwitch:{no:v("f_sw_no"),model:v("f_sw_model"),ports:v("f_sw_ports")},
-      router:{no:v("f_rt_no"),model:v("f_rt_model"),wanIp:v("f_rt_ip")},
-      isp:{name:v("f_isp"),plan:v("f_isp_plan"),accountId:v("f_isp_id")},
+function handleFile(file){
+  showError('');
+  document.getElementById('fileInfo').textContent = 'Reading ' + file.name + ' ...';
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const sheetName = wb.SheetNames.includes('Data') ? 'Data' : wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if (!rows.length) { showError('The selected sheet is empty.'); return; }
+      const headers = rows[0].map(h => norm(h));
+      const headerPairs = headers.map((h, idx) => ({h, idx})).filter(p => p.h !== '');
+      UPLOADED_HEADERS = headerPairs.map(p => p.h);
+      const rawColIdxs = headerPairs.map(p => p.idx);
+      const colIdx = {};
+      REQUIRED_COLS.forEach(c => colIdx[c] = headers.indexOf(c));
+      OPTIONAL_COLS.forEach(c => colIdx[c] = headers.indexOf(c));
+      const missing = REQUIRED_COLS.filter(c => colIdx[c] === -1);
+      if (missing.length){
+        showError('Missing required column(s) in "' + sheetName + '" sheet: ' + missing.join(', ') + '. Found columns: ' + headers.filter(h=>h).join(', '));
+        return;
+      }
+      function getCol(r, name){
+        const idx = colIdx[name];
+        return idx === -1 || idx === undefined ? '' : r[idx];
+      }
+      const records = [];
+      let reversedCount = 0, reversedAmount = 0;
+      const hasReversalCol = colIdx['Reversal Indicator'] !== -1 && colIdx['Reversal Indicator'] !== undefined;
+      for (let i=1; i<rows.length; i++){
+        const r = rows[i];
+        if (!r || r.length===0) continue;
+        const amt = parseFloat(getCol(r,'Amount in Local Currency'));
+        if (isNaN(amt)) continue;
+        // Column U — Reversal Indicator. Any non-blank value means this row has been reversed
+        // and must be excluded from every reconciliation calculation.
+        const reversalFlag = norm(getCol(r,'Reversal Indicator'));
+        if (reversalFlag !== ''){
+          reversedCount++;
+          reversedAmount += amt;
+          continue;
+        }
+        let postingDate = getCol(r,'Posting Date');
+        if (postingDate instanceof Date) postingDate = postingDate.toLocaleDateString('en-IN');
+        else postingDate = norm(postingDate);
+        // Full, un-shrunk copy of every original column for this row, in original order —
+        // used so downloaded difference/break sheets can show the complete source data, not a trimmed subset.
+        const rawRow = rawColIdxs.map(idx => {
+          const v = r[idx];
+          if (v===undefined || v===null) return '';
+          if (v instanceof Date) return v.toLocaleDateString('en-IN'); // avoid Excel-serial/timezone round-trip issues on export
+          return v;
+        });
+        records.push({
+          amount: amt,
+          segment: norm(getCol(r,'Segment')),
+          glAccount: norm(getCol(r,'G/L Account')),
+          glDescription: norm(getCol(r,'GL Description')),
+          docNumber: norm(getCol(r,'Document Number')),
+          docType: norm(getCol(r,'Document Type')),
+          postingDate: postingDate,
+          text: norm(getCol(r,'Text')),
+          segmentName: norm(getCol(r,'Segment Name')),
+          offsetAcct: norm(getCol(r,'Offsetting Account')),
+          offsetDesc: norm(getCol(r,'Offset Account Description')),
+          assignment: norm(getCol(r,'Assignment')),
+          raw: rawRow,
+        });
+      }
+      window.__pendingRecords = records;
+      let infoMsg = 'Loaded ' + records.length.toLocaleString('en-IN') + ' transaction rows from "' + file.name + '" (sheet: ' + sheetName + ').';
+      if (hasReversalCol){
+        infoMsg += ' Excluded ' + reversedCount.toLocaleString('en-IN') + ' reversed row(s) (Reversal Indicator column) totalling ₹' + reversedAmount.toLocaleString('en-IN', {maximumFractionDigits:0}) + ' — not considered in any calculation.';
+      }
+      infoMsg += ' Click "Start Reconciliation" to proceed.';
+      document.getElementById('fileInfo').textContent = infoMsg;
+      document.getElementById('reconcileBtn').disabled = false;
+      document.getElementById('results').style.display = 'none';
+    } catch(err){
+      showError('Could not read this file: ' + err.message);
+      window.__pendingRecords = null;
+      document.getElementById('reconcileBtn').disabled = true;
     }
   };
+  reader.onerror = function(){ showError('Failed to read the file.'); };
+  reader.readAsArrayBuffer(file);
+}
 
-  try{
-    const res=await apiPost(payload);
-    hideOverlay(); document.getElementById("save-btn").disabled=false;
-    if(res.status==="success"){
-      toast("Saved to Sheets ✓","Entry "+res.entryId+" saved to "+Object.keys(res.sheets||{}).length+" sheet(s)");
-      clearForm();
-    }else{
-      toast("Error",res.message||"Save failed","err");
+function buildMatrix(records){
+  window.__lastRecords = records; // kept for on-demand transaction drill-down (break analysis)
+  // matrix[ledgerIdx][branchIdx] = difference
+  const matrix = LEDGERS.map(() => BRANCHES.map(() => 0));
+
+  LEDGERS.forEach((L, li) => {
+    const [ledgerNo, ledgerName, homeBranch, homeSeg] = L;
+    BRANCHES.forEach((B, bi) => {
+      const [branchSeg, branchName] = B;
+      const isSelfPair = LEDGER_BY_BRANCH[branchName] === ledgerNo; // same guard as the workbook's IF($E$3=C7,0,...)
+      let d = 0, e = 0;
+      for (const r of records){
+        if (r.glAccount === ledgerNo && r.segment === branchSeg) d += r.amount;
+        if (!isSelfPair && homeSeg && r.segment === homeSeg && LEDGER_BY_DESC[r.glDescription] === branchName) e += r.amount;
+      }
+      matrix[li][bi] = d + e;
+    });
+  });
+
+  renderMatrix(matrix);
+  renderMismatches(matrix);
+  renderSummary(matrix);
+  renderMapping();
+  renderPerLedgerSummary(records);
+  document.getElementById('results').style.display = 'block';
+}
+
+function computeLedgerSummary(homeLedger, records){
+  const [homeNo, homeName, homeBranch, homeSeg] = homeLedger;
+  const rows = LEDGERS.map(r => {
+    const [rNo, rName, rBranch, rSeg] = r;
+    let e = 0;
+    if (rSeg){
+      for (const rec of records) if (rec.glAccount === homeNo && rec.segment === rSeg) e += rec.amount;
     }
-  }catch(e){
-    hideOverlay(); document.getElementById("save-btn").disabled=false;
-    toast("Network Error",e.message,"err");
+    let f = 0;
+    if (homeNo !== rNo){
+      for (const rec of records) if (rec.glAccount === rNo && rec.segment === homeSeg) f += rec.amount;
+    }
+    return { segCode: rSeg || '—', glNo: rNo, glName: rName, branch: rBranch, e, f, g: e + f };
+  });
+  const totE = rows.reduce((a,r)=>a+r.e,0);
+  const totF = rows.reduce((a,r)=>a+r.f,0);
+  const totG = rows.reduce((a,r)=>a+r.g,0);
+  return { rows, totE, totF, totG };
+}
+
+function txnTable(title, txns, sumLabel){
+  let h = `<div style="font-weight:600;font-size:12px;margin:8px 0 4px;color:var(--heading-txt);">${title} <span style="font-weight:400;color:var(--text-sub);">(${txns.length} entr${txns.length===1?'y':'ies'})</span></div>`;
+  if (!txns.length){
+    h += '<div style="font-size:12px;color:var(--muted-txt);margin-bottom:8px;">No transactions found on this side.</div>';
+    return h;
+  }
+  h += '<table style="font-size:11px;margin-bottom:10px;"><thead><tr><th class="label">Posting Date</th><th class="label">Document No.</th><th class="label">Doc Type</th><th>Amount</th><th class="label">Text</th><th class="label">Offset A/c</th></tr></thead><tbody>';
+  let sum = 0;
+  txns.forEach(t => {
+    sum += t.amount;
+    h += `<tr><td class="label">${t.postingDate||'—'}</td><td class="label">${t.docNumber||'—'}</td><td class="label">${t.docType||'—'}</td><td>${fmt(t.amount)}</td><td class="label">${t.text||'—'}</td><td class="label">${t.offsetDesc||t.offsetAcct||'—'}</td></tr>`;
+  });
+  h += `<tr class="totalrow"><td class="label" colspan="3">${sumLabel}</td><td>${fmt(sum)}</td><td class="label" colspan="2"></td></tr>`;
+  h += '</tbody></table>';
+  return h;
+}
+
+// Nets every transaction on both sides against its absolute value (SUMIFS on ABS(Amount)) and
+// drops any group that cancels out to zero — what's left is the exact figure behind the Difference.
+function computeExactDifference(cpTxns, rpTxns){
+  const combined = cpTxns.map(t => Object.assign({}, t, {side:'Counter Party'}))
+    .concat(rpTxns.map(t => Object.assign({}, t, {side:'Respective'})));
+  const groups = {};
+  combined.forEach(t => {
+    const key = Math.abs(round2(t.amount)).toFixed(2);
+    if (!groups[key]) groups[key] = { sum: 0, txns: [] };
+    groups[key].sum += t.amount;
+    groups[key].txns.push(t);
+  });
+  const exactItems = [];
+  Object.keys(groups).forEach(key => {
+    const g = groups[key];
+    if (Math.abs(round2(g.sum)) > 0.01){ // ignore groups that SUMIFS nets to zero — they're already matched
+      g.txns.forEach(t => exactItems.push(t));
+    }
+  });
+  exactItems.sort((a,b) => Math.abs(b.amount) - Math.abs(a.amount));
+  const exactTotal = round2(exactItems.reduce((a,t) => a + t.amount, 0));
+  return { exactItems, exactTotal, ignoredCount: combined.length - exactItems.length };
+}
+
+function exactDiffTable(exactItems, exactTotal, expectedDiff){
+  let h = `<div style="font-weight:700;font-size:13px;margin:6px 0 4px;color:var(--heading-txt);">Exact Difference &mdash; after netting equal &amp; opposite entries <span style="font-weight:400;color:var(--text-sub);">(${exactItems.length} entr${exactItems.length===1?'y':'ies'} remain)</span></div>`;
+  if (!exactItems.length){
+    h += '<div style="font-size:12px;color:var(--muted-txt);margin-bottom:8px;">Everything on both sides cancelled out — no residual difference found.</div>';
+    return h;
+  }
+  h += '<table style="font-size:11px;margin-bottom:6px;"><thead><tr><th class="label">Side</th><th class="label">Posting Date</th><th class="label">Document No.</th><th class="label">Doc Type</th><th>Amount</th><th class="label">Text</th><th class="label">Offset A/c</th></tr></thead><tbody>';
+  exactItems.forEach(t => {
+    h += `<tr><td class="label">${t.side}</td><td class="label">${t.postingDate||'—'}</td><td class="label">${t.docNumber||'—'}</td><td class="label">${t.docType||'—'}</td><td class="mismatch">${fmt(t.amount)}</td><td class="label">${t.text||'—'}</td><td class="label">${t.offsetDesc||t.offsetAcct||'—'}</td></tr>`;
+  });
+  h += `<tr class="totalrow"><td class="label" colspan="4">Exact Difference Total</td><td class="mismatch">${fmt(exactTotal)}</td><td class="label" colspan="2"></td></tr>`;
+  h += '</tbody></table>';
+  if (expectedDiff !== undefined && Math.abs(round2(exactTotal - expectedDiff)) <= 1){
+    h += '<div style="font-size:11px;color:var(--green-txt);margin-bottom:10px;">✓ Matches the Difference column.</div>';
+  } else {
+    h += '<div style="font-size:11px;color:var(--text-sub);margin-bottom:10px;"></div>';
+  }
+  return h;
+}
+
+function toggleBreakDetail(rowId, homeLedgerNo, branchSegCode, branchLedgerNo, expectedDiff){
+  const row = document.getElementById(rowId);
+  const content = document.getElementById(rowId + '-content');
+  if (row.style.display === 'none'){
+    row.style.display = 'table-row';
+    if (!content.dataset.loaded){
+      const records = window.__lastRecords || [];
+      const home = LEDGERS.find(l => l[0] === homeLedgerNo);
+      const homeSeg = home ? home[3] : '';
+      const counterPartyTxns = (branchSegCode && branchSegCode !== '—')
+        ? records.filter(r => r.glAccount === homeLedgerNo && r.segment === branchSegCode)
+        : [];
+      const respectiveTxns = (homeLedgerNo !== branchLedgerNo)
+        ? records.filter(r => r.glAccount === branchLedgerNo && r.segment === homeSeg)
+        : [];
+      const { exactItems, exactTotal } = computeExactDifference(counterPartyTxns, respectiveTxns);
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">`
+        + `<div style="font-size:11px;color:var(--text-sub);">Break for GL ${homeLedgerNo} vs Segment ${branchSegCode} (GL ${branchLedgerNo}).</div>`
+        + `<button class="secondary" style="font-size:11px;padding:5px 10px;flex-shrink:0;" onclick="downloadRowBreak('${homeLedgerNo}','${branchSegCode}','${branchLedgerNo}')">Download this difference (Excel)</button>`
+        + `</div>`;
+      html += exactDiffTable(exactItems, exactTotal, expectedDiff);
+      html += `<details><summary style="font-size:11px;">Show full transaction list on both sides (for reference)</summary>`;
+      html += txnTable('Counter Party Side &mdash; booked by the counterparty branch using this ledger', counterPartyTxns, 'Counter Party Total');
+      html += txnTable('Respective Side &mdash; booked by the home branch using the counterparty’s ledger', respectiveTxns, 'Respective Total');
+      html += `</details>`;
+      content.innerHTML = html;
+      content.dataset.loaded = '1';
+    }
+  } else {
+    row.style.display = 'none';
   }
 }
 
-// ── RECORDS ──
-let allRows=[],allHdrs=[];
-async function loadRecords(){
-  const key=document.getElementById("rec-sheet-sel").value;
-  document.getElementById("rec-count").textContent="Loading…";
-  if(!GAS_URL){document.getElementById("rec-footer").textContent="⚠ Sheet not configured";return;}
-  try{
-    const res=await apiGet({action:"getSheet",sheet:key});
-    if(res.status==="ok"){
-      allHdrs=res.headers||[]; allRows=res.rows||[];
-      renderRec(allRows);
-    }else{
-      document.getElementById("rec-footer").textContent="Error: "+res.message;
-    }
-  }catch(e){document.getElementById("rec-footer").textContent="Network error: "+e.message;}
+async function downloadRowBreak(homeLedgerNo, branchSegCode, branchLedgerNo){
+  const records = window.__lastRecords || [];
+  const home = LEDGERS.find(l => l[0] === homeLedgerNo);
+  const cp = LEDGERS.find(l => l[0] === branchLedgerNo);
+  if (!home || !cp){ showError('Could not find this ledger pair.'); return; }
+  const homeSeg = home[3];
+  const branchName = cp[2];
+
+  const counterPartyTxns = (branchSegCode && branchSegCode !== '—')
+    ? records.filter(r => r.glAccount === homeLedgerNo && r.segment === branchSegCode)
+    : [];
+  const respectiveTxns = (homeLedgerNo !== branchLedgerNo)
+    ? records.filter(r => r.glAccount === branchLedgerNo && r.segment === homeSeg)
+    : [];
+
+  const { exactItems, exactTotal } = computeExactDifference(counterPartyTxns, respectiveTxns);
+  const amtIdx = UPLOADED_HEADERS.indexOf('Amount in Local Currency');
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Break');
+  ws.addRow([`Break: ${home[2]} (GL ${homeLedgerNo}) vs ${branchName} (GL ${branchLedgerNo})`]);
+  ws.addRow([]);
+  ws.addRow(['EXACT DIFFERENCE — after netting equal & opposite entries (SUMIFS on ABS amount, zero-net groups ignored). Every original column shown below, un-shrunk. Blue rows = Counter Party, orange rows = Respective Party.']);
+  let headerRow = ws.addRow(['Side', ...UPLOADED_HEADERS]);
+  styleHeaderRow(headerRow);
+  addTxnRows(ws, exactItems);
+  ws.addRow(['Exact Difference Total', ...UPLOADED_HEADERS.map((h,i) => i===amtIdx ? round2(exactTotal) : '')]).font = {bold:true};
+  ws.addRow([]);
+  ws.addRow([]);
+  ws.addRow(['Full Transaction List (reference) — both sides before netting. Blue rows = Counter Party, orange rows = Respective Party.']);
+  headerRow = ws.addRow(['Side', ...UPLOADED_HEADERS]);
+  styleHeaderRow(headerRow);
+  addTxnRows(ws, counterPartyTxns, 'Counter Party');
+  addTxnRows(ws, respectiveTxns, 'Respective');
+  const total = counterPartyTxns.reduce((a,t)=>a+t.amount,0) + respectiveTxns.reduce((a,t)=>a+t.amount,0);
+  ws.addRow(['Difference', ...UPLOADED_HEADERS.map((h,i) => i===amtIdx ? round2(total) : '')]).font = {bold:true};
+  sizeColumns(ws);
+
+  await downloadWorkbookExcelJS(wb, `${home[2]} vs ${branchName} - Break.xlsx`);
 }
 
-function renderRec(rows){
-  document.getElementById("rec-thead").innerHTML="<tr>"+allHdrs.map(h=>`<th>${h}</th>`).join("")+"<th>Del</th></tr>";
-  document.getElementById("rec-tbody").innerHTML=rows.length
-    ? rows.map(r=>"<tr>"+allHdrs.map(h=>`<td class="${allHdrs[0]===h?'td-m':''}">${r[h]||"—"}</td>`).join("")+`<td><button class="btn btn-red" onclick="deleteRow('${r[allHdrs[0]]}')">🗑</button></td></tr>`).join("")
-    : `<tr><td colspan="${allHdrs.length+1}" style="text-align:center;padding:32px;color:var(--text3)">No records found</td></tr>`;
-  document.getElementById("rec-count").textContent=rows.length+" records";
-  document.getElementById("rec-footer").textContent=rows.length+" entries loaded · Google Sheets";
+function renderPerLedgerSummary(records){
+  document.getElementById('perLedgerBadge').textContent = LEDGERS.length + ' ledgers';
+
+  const list = document.getElementById('ledgerList');
+  list.innerHTML = LEDGERS.map(L => {
+    const { totG } = computeLedgerSummary(L, records);
+    const dot = Math.abs(totG) > 1 ? '<span class="mismatch-dot"></span>' : '';
+    return `<div class="ledger-item" id="li-${L[0]}" onclick="selectLedgerFromList('${L[0]}')">
+      <div>${dot}${L[2]} <span style="color:inherit;opacity:.65;font-weight:400;">(GL ${L[0]})</span></div>
+      <div class="sub">${L[1]}</div>
+    </div>`;
+  }).join('');
+
+  selectLedgerFromList(LEDGERS[0][0]);
 }
 
-function searchRecords(q){
-  renderRec(allRows.filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(q.toLowerCase()))));
+function selectLedgerFromList(ledgerNo){
+  const records = window.__lastRecords;
+  if (!records) return;
+
+  document.querySelectorAll('.ledger-item').forEach(el => el.classList.remove('active'));
+  const li = document.getElementById('li-' + ledgerNo);
+  if (li) li.classList.add('active');
+
+  const L = LEDGERS.find(l => l[0] === ledgerNo);
+  const pane = document.getElementById('ledgerDetailPane');
+  const { rows, totE, totF, totG } = computeLedgerSummary(L, records);
+  const mismatched = Math.abs(totG) > 1;
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:6px;">`;
+  html += `<div style="font-weight:700;color:var(--heading-txt);">${L[2]} &mdash; ${L[1]} <span style="font-weight:400;color:var(--text-sub);">(GL ${L[0]})</span></div>`;
+  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;">`;
+  html += `<button class="secondary" style="font-size:12px;padding:6px 10px;" onclick="downloadLedgerSummaryAndDifference('${L[0]}')">Download Summary &amp; Difference (Excel)</button>`;
+  html += `</div></div>`;
+  html += '<div style="font-size:11px;color:var(--text-sub);margin-bottom:6px;">Click a segment code to see the exact transactions causing the break, or use the Download column to get that row\'s difference straight away.</div>';
+  html += '<table><thead><tr><th class="label">Segment</th><th class="label">GL Number</th><th class="label">Ledger Name</th><th class="label">Segment Name</th><th>Counter Party Balance</th><th>Respective Balance</th><th>Difference</th><th class="label">Download</th></tr></thead><tbody>';
+  rows.forEach((r, ri) => {
+    const cls = Math.abs(r.g) > 1 ? 'mismatch' : 'zero';
+    const rowId = 'brk-' + L[0] + '-' + ri;
+    const clickable = Math.abs(r.g) > 1;
+    const downloadCell = clickable
+      ? `<button class="secondary" style="font-size:11px;padding:4px 8px;" onclick="event.stopPropagation();downloadRowBreak('${L[0]}','${r.segCode}','${r.glNo}')">⬇ Excel</button>`
+      : `<span style="color:var(--muted-txt);font-size:11px;">&mdash;</span>`;
+    html += `<tr${clickable ? ` style="cursor:pointer;" onclick="toggleBreakDetail('${rowId}','${L[0]}','${r.segCode}','${r.glNo}',${round2(r.g)})"` : ''}>`
+      + `<td class="label">${r.segCode}${clickable ? ' 🔍' : ''}</td><td class="label">${r.glNo}</td><td class="label">${r.glName}</td><td class="label">${r.branch}</td><td>${fmt(r.e)}</td><td>${fmt(r.f)}</td><td class="${cls}">${fmt(r.g)}</td><td class="label">${downloadCell}</td></tr>`;
+    html += `<tr id="${rowId}" style="display:none;"><td colspan="8" style="padding:0;background:var(--detail-bg);"><div id="${rowId}-content" style="padding:10px 14px;"></div></td></tr>`;
+  });
+  const totCls = mismatched ? 'mismatch' : 'zero';
+  html += `<tr class="totalrow"><td class="label" colspan="4">Total</td><td>${fmt(totE)}</td><td>${fmt(totF)}</td><td class="${totCls}">${fmt(totG)}</td><td class="label"></td></tr>`;
+  html += '</tbody></table>';
+  pane.innerHTML = html;
 }
 
-async function deleteRow(id){
-  if(!confirm("Delete entry "+id+"? This cannot be undone."))return;
-  const key=document.getElementById("rec-sheet-sel").value;
-  try{
-    const res=await apiPost({action:"delete",sheet:key,entryId:id});
-    toast(res.status==="success"?"Deleted ✓":("Error: "+res.message),(res.status==="success"?"Row removed from "+SHEET_NAMES[key]:res.message),res.status==="success"?"ok":"err");
-    if(res.status==="success")loadRecords();
-  }catch(e){toast("Error",e.message,"err");}
-}
-
-// ── REPORT ──
-async function loadReport(){
-  if(!GAS_URL){toast("Not Configured","Configure the Sheet URL in Settings","err");return;}
-  try{
-    const res=await apiGet({action:"getSummary"});
-    if(res.status==="ok"){
-      let i=1;
-      document.getElementById("report-body").innerHTML=Object.entries(res.summary).map(([k,count])=>
-        `<tr><td class="td-m">${i++}</td><td class="td-p">${k}</td><td style="color:var(--text3)">${SHEET_NAMES[k]||k}</td><td style="font-family:var(--font-mono);color:var(--accent);font-size:16px;font-weight:700">${count}</td></tr>`
-      ).join("");
-    }
-  }catch(e){toast("Error",e.message,"err");}
-}
-
-// ── DASHBOARD SYNC ──
-async function syncDashboard(){
-  if(!GAS_URL){setBadge("none");return;}
-  try{
-    const res=await apiGet({action:"getSummary"});
-    if(res.status==="ok"){
-      const s=res.summary;
-      document.getElementById("s-users").textContent=s.USER||0;
-      document.getElementById("s-sys").textContent=(s.WINDOWS||0)+(s.LINUX||0)+(s.SERVER||0);
-      document.getElementById("s-prn").textContent=(s.THERMAL||0)+(s.BARCODE||0)+(s.INK||0)+(s.CHEQUE||0);
-      document.getElementById("s-net").textContent=(s.SWITCH||0)+(s.ROUTER||0);
-      buildInvGrid(s); setBadge("ok");
-    }
-  }catch(e){setBadge("err");}
-}
-
-function buildInvGrid(s){
-  const items=[
-    {icon:"🖥️",bg:"rgba(74,158,255,.12)",n:"Windows Systems",v:s.WINDOWS||0,c:"var(--blue)"},
-    {icon:"🐧",bg:"rgba(232,160,32,.12)",n:"Linux Systems",v:s.LINUX||0,c:"var(--accent)"},
-    {icon:"🗄️",bg:"rgba(248,113,113,.1)",n:"Server OS",v:s.SERVER||0,c:"var(--red)"},
-    {icon:"🧾",bg:"rgba(62,207,142,.12)",n:"Thermal Printers",v:s.THERMAL||0,c:"var(--green)"},
-    {icon:"📦",bg:"rgba(167,139,250,.1)",n:"Barcode Printers",v:s.BARCODE||0,c:"var(--purple)"},
-    {icon:"💧",bg:"rgba(74,158,255,.12)",n:"Ink Printers",v:s.INK||0,c:"var(--blue)"},
-    {icon:"💳",bg:"rgba(232,160,32,.12)",n:"Cheque Printers",v:s.CHEQUE||0,c:"var(--accent)"},
-    {icon:"📄",bg:"rgba(248,113,113,.1)",n:"Doc Scanners",v:s.DOC_SCANNER||0,c:"var(--red)"},
-    {icon:"📠",bg:"rgba(62,207,142,.12)",n:"Xerox Machines",v:s.XEROX||0,c:"var(--green)"},
-    {icon:"📱",bg:"rgba(167,139,250,.1)",n:"Mobile Scanners",v:s.MOBILE_SCANNER||0,c:"var(--purple)"},
-    {icon:"🔀",bg:"rgba(74,158,255,.12)",n:"Switches",v:s.SWITCH||0,c:"var(--blue)"},
-    {icon:"📡",bg:"rgba(232,160,32,.12)",n:"Routers",v:s.ROUTER||0,c:"var(--accent)"},
+function renderSummary(matrix){
+  let grand = 0, mismatchCount = 0, cleanCount = 0;
+  matrix.forEach(row => row.forEach(v => {
+    grand += v;
+    if (Math.abs(v) > 1) mismatchCount++; else cleanCount++;
+  }));
+  const stats = [
+    ['Total unreconciled value', '₹' + fmt(grand)],
+    ['Mismatched branch-pairs', mismatchCount.toLocaleString('en-IN')],
+    ['Clean branch-pairs', cleanCount.toLocaleString('en-IN')],
+    ['FT ledgers checked', LEDGERS.length],
   ];
-  document.getElementById("inv-grid").innerHTML=items.map(i=>
-    `<div class="inv-card"><div class="inv-icon" style="background:${i.bg}">${i.icon}</div>
-    <div class="inv-info"><div class="inv-name">${i.n}</div><div class="inv-count" style="color:${i.c}">${i.v}</div></div></div>`
-  ).join("");
+  document.getElementById('summary').innerHTML = stats.map(s =>
+    `<div class="stat"><div class="num">${s[1]}</div><div class="lbl">${s[0]}</div></div>`
+  ).join('');
 }
 
-// ── NAV ──
-function showPage(name,el){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById("page-"+name).classList.add("active");
-  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-  if(el)el.classList.add("active");
-  if(name==="records")loadRecords();
-  if(name==="report")loadReport();
+function renderMatrix(matrix){
+  let html = '<thead><tr><th class="label">Home Ledger \\ Counterparty Branch</th>';
+  BRANCHES.forEach(b => html += `<th>${b[1]}</th>`);
+  html += '<th>Total</th></tr></thead><tbody>';
+
+  const colTotals = BRANCHES.map(()=>0);
+  let grandTotal = 0;
+
+  LEDGERS.forEach((L, li) => {
+    const rowTotal = matrix[li].reduce((a,b)=>a+b,0);
+    html += `<tr><td class="label">${L[2]} <span style="color:var(--text-sub);font-weight:400;">(${L[1]})</span></td>`;
+    matrix[li].forEach((v, bi) => {
+      colTotals[bi] += v;
+      const cls = Math.abs(v) > 1 ? 'mismatch' : 'zero';
+      html += `<td class="${cls}">${fmt(v)}</td>`;
+    });
+    grandTotal += rowTotal;
+    const cls = Math.abs(rowTotal) > 1 ? 'mismatch totalcol' : 'zero totalcol';
+    html += `<td class="${cls}">${fmt(rowTotal)}</td></tr>`;
+  });
+
+  html += `<tr class="totalrow"><td class="label">Column Total</td>`;
+  colTotals.forEach(v => html += `<td>${fmt(v)}</td>`);
+  html += `<td>${fmt(grandTotal)}</td></tr>`;
+  html += '</tbody>';
+
+  document.getElementById('matrixTable').innerHTML = html;
+  document.getElementById('matrixBadge').textContent = LEDGERS.length + ' x ' + BRANCHES.length;
+
+  window.__lastMatrix = matrix;
 }
 
-// ── HELPERS ──
-const v=id=>document.getElementById(id).value;
-function clearForm(){document.querySelectorAll("#page-input input,#page-input select").forEach(e=>e.value="");document.getElementById("entry-date").textContent=new Date().toLocaleString("en-IN");}
-function showOverlay(m){document.getElementById("overlay").classList.add("show");document.getElementById("overlay-msg").textContent=m;}
-function hideOverlay(){document.getElementById("overlay").classList.remove("show");}
-function toast(title,sub,type="ok"){
-  document.getElementById("t-title").textContent=title;
-  document.getElementById("t-sub").textContent=sub;
-  document.getElementById("t-icon").textContent=type==="ok"?"✅":type==="err"?"❌":"⚠️";
-  const t=document.getElementById("toast");
-  t.style.borderColor=type==="ok"?"var(--green)":type==="err"?"var(--red)":"var(--accent)";
-  document.getElementById("t-title").style.color=type==="ok"?"var(--green)":type==="err"?"var(--red)":"var(--accent)";
-  t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),4000);
+function renderMismatches(matrix){
+  const items = [];
+  LEDGERS.forEach((L, li) => {
+    BRANCHES.forEach((B, bi) => {
+      const v = matrix[li][bi];
+      if (Math.abs(v) > 1) items.push({home: L[2], branch: B[1], value: v});
+    });
+  });
+  items.sort((a,b) => Math.abs(b.value) - Math.abs(a.value));
+  const top = items.slice(0, 20);
+  const list = document.getElementById('mismatchList');
+  if (!top.length){
+    list.innerHTML = '<li>No mismatches above ₹1 &mdash; everything reconciles.</li>';
+    return;
+  }
+  list.innerHTML = top.map(it =>
+    `<li><strong>${it.home}</strong> vs <strong>${it.branch}</strong>: ₹${fmt(it.value)}</li>`
+  ).join('');
 }
 
-// ── INIT ──
-document.getElementById("entry-date").textContent=new Date().toLocaleString("en-IN");
-buildInvGrid({});
-if(GAS_URL){document.getElementById("cfg-url").value=GAS_URL;setBadge("ok");syncDashboard();}
+function renderMapping(){
+  let h = '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:10px;">';
+  h += '<table style="width:auto;"><thead><tr><th>Ledger No.</th><th>Ledger Name</th><th class="label">Home Branch</th><th>Segment</th></tr></thead><tbody>';
+  LEDGERS.forEach(l => h += `<tr><td>${l[0]}</td><td>${l[1]}</td><td class="label">${l[2]}</td><td>${l[3]||'&mdash;'}</td></tr>`);
+  h += '</tbody></table>';
+  h += '<table style="width:auto;"><thead><tr><th>Segment Code</th><th class="label">Branch Name</th></tr></thead><tbody>';
+  BRANCHES.forEach(b => h += `<tr><td>${b[0]}</td><td class="label">${b[1]}</td></tr>`);
+  h += '</tbody></table></div>';
+  document.getElementById('mappingTables').innerHTML = h;
+}
+
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+
+// ── Excel export helpers (ExcelJS — used only for writing, so cell colours actually work) ──
+const CP_FILL = 'FFDCEBFA';   // light blue  — Counter Party rows
+const RP_FILL = 'FFFDE4C8';  // light orange — Respective Party rows
+const HEADER_FILL = 'FF1F4E78';
+
+function styleHeaderRow(row){
+  row.eachCell({includeEmpty:true}, cell => {
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb: HEADER_FILL}};
+    cell.font = {color:{argb:'FFFFFFFF'}, bold:true};
+  });
+}
+
+function fillForSide(side){
+  if (side === 'Counter Party') return CP_FILL;
+  if (side === 'Respective') return RP_FILL;
+  return null;
+}
+
+function styleSideRow(row, side){
+  const argb = fillForSide(side);
+  if (!argb) return;
+  row.eachCell({includeEmpty:true}, cell => {
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb}};
+  });
+}
+
+// Adds one row per transaction using every original uploaded column (t.raw), prefixed by its Side label.
+function addTxnRows(ws, items, sideOverride){
+  items.forEach(t => {
+    const side = sideOverride || t.side;
+    const row = ws.addRow([side, ...(t.raw || UPLOADED_HEADERS.map(()=>''))]);
+    styleSideRow(row, side);
+  });
+}
+
+function sizeColumns(ws){
+  ws.getColumn(1).width = 18;
+  UPLOADED_HEADERS.forEach((h, i) => {
+    ws.getColumn(i + 2).width = Math.max(14, Math.min(30, h.length + 4));
+  });
+}
+
+function downloadWorkbookExcelJS(wb, filename){
+  return wb.xlsx.writeBuffer().then(buffer => {
+    const blob = new Blob([buffer], {type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }).catch(err => showError('Could not build the Excel file: ' + err.message));
+}
+
+function addSummarySheet(wb, sheetNameStr, L, records){
+  const [no, name, branch, seg] = L;
+  const { rows, totE, totF, totG } = computeLedgerSummary(L, records);
+  const ws = wb.addWorksheet(sheetNameStr);
+  ws.addRow([`Ledger No: ${no}`, `Ledger Name: ${name}`, `Home Branch: ${branch}`, `Home Segment: ${seg || '—'}`]);
+  ws.addRow([]);
+  const headerRow = ws.addRow(['Segment','GL Number','Ledger Name','Segment Name','Counter Party Balance','Respective Balance','Difference','Status']);
+  styleHeaderRow(headerRow);
+  rows.forEach(r => ws.addRow([r.segCode, r.glNo, r.glName, r.branch, round2(r.e), round2(r.f), round2(r.g), Math.abs(r.g) > 1 ? 'MISMATCH' : 'OK']));
+  const totalRow = ws.addRow(['','','','Total', round2(totE), round2(totF), round2(totG), Math.abs(totG) > 1 ? 'MISMATCH' : 'OK']);
+  totalRow.font = {bold:true};
+  ws.columns = [{width:14},{width:14},{width:16},{width:18},{width:20},{width:18},{width:14},{width:12}];
+  return ws;
+}
+
+// Returns one entry per mismatched branch pair for this ledger, each already netted down
+// to the exact difference (via computeExactDifference).
+function computeLedgerBreaks(L, records){
+  const [no, name, branch, seg] = L;
+  const { rows } = computeLedgerSummary(L, records);
+  const breaks = [];
+  rows.forEach(r => {
+    if (Math.abs(r.g) <= 1) return;
+    const rSeg = r.segCode === '—' ? '' : r.segCode;
+    const cpTxns = rSeg ? records.filter(rec => rec.glAccount === no && rec.segment === rSeg) : [];
+    const respTxns = (no !== r.glNo) ? records.filter(rec => rec.glAccount === r.glNo && rec.segment === seg) : [];
+    const { exactItems, exactTotal } = computeExactDifference(cpTxns, respTxns);
+    breaks.push({ counterpartyBranch: r.branch, exactItems, exactTotal });
+  });
+  return breaks;
+}
+
+function addPairSheet(wb, sheetNameStr, homeBranch, counterpartyBranch, exactItems, exactTotal){
+  const ws = wb.addWorksheet(sheetNameStr);
+  ws.addRow([`${counterpartyBranch} vs ${homeBranch}`]);
+  ws.addRow(['Exact difference after netting equal & opposite amounts on both sides — zero-net groups ignored. Every original column is shown below, un-shrunk. Blue rows = Counter Party, orange rows = Respective Party.']);
+  ws.addRow([]);
+  const headerRow = ws.addRow(['Side', ...UPLOADED_HEADERS]);
+  styleHeaderRow(headerRow);
+  addTxnRows(ws, exactItems);
+  const amtIdx = UPLOADED_HEADERS.indexOf('Amount in Local Currency');
+  const totalRow = ws.addRow(['Exact Difference Total', ...UPLOADED_HEADERS.map((h,i) => i===amtIdx ? round2(exactTotal) : '')]);
+  totalRow.font = {bold:true};
+  sizeColumns(ws);
+  return ws;
+}
+
+function makeSheetNamer(reserved){
+  const used = new Set(reserved || []);
+  return function sheetName(raw){
+    let s = String(raw).replace(/[\\\/\?\*\[\]:]/g, '').trim().substring(0,31) || 'Sheet';
+    let out = s, i = 1;
+    while (used.has(out)){ out = (s.substring(0,28) + '_' + (++i)); }
+    used.add(out);
+    return out;
+  };
+}
+
+async function downloadLedgerSummaryAndDifference(ledgerNo){
+  const records = window.__lastRecords;
+  if (!records){ showError('Please run a reconciliation first.'); return; }
+  const L = LEDGERS.find(l => l[0] === ledgerNo);
+  const sheetName = makeSheetNamer();
+  const wb = new ExcelJS.Workbook();
+
+  addSummarySheet(wb, sheetName('Summary'), L, records);
+
+  const breaks = computeLedgerBreaks(L, records);
+  if (!breaks.length){
+    wb.addWorksheet(sheetName('Difference')).addRow(['Fully reconciled — no mismatches above ₹1 for this ledger.']);
+  } else {
+    breaks.forEach(b => {
+      addPairSheet(wb, sheetName(`${b.counterpartyBranch} vs ${L[2]}`), L[2], b.counterpartyBranch, b.exactItems, b.exactTotal);
+    });
+  }
+
+  await downloadWorkbookExcelJS(wb, `${L[2]} - ${L[1]} - Summary & Difference.xlsx`);
+}
+
+async function downloadExcelReport(){
+  const matrix = window.__lastMatrix;
+  const records = window.__lastRecords;
+  if (!matrix || !records){ showError('Please run a reconciliation first.'); return; }
+
+  const wb = new ExcelJS.Workbook();
+
+  // ---- Sheet 1: Matrix (quick overview across all ledgers) ----
+  const ws0 = wb.addWorksheet('Matrix');
+  const matrixHeaderRow = ws0.addRow(['Home Branch','Home Ledger No', ...BRANCHES.map(b=>b[1]), 'Total']);
+  styleHeaderRow(matrixHeaderRow);
+  const colTotals = BRANCHES.map(()=>0);
+  let grandTotal = 0;
+  LEDGERS.forEach((L, li) => {
+    const rowTotal = matrix[li].reduce((a,b)=>a+b,0);
+    grandTotal += rowTotal;
+    matrix[li].forEach((v,bi)=> colTotals[bi]+=v);
+    ws0.addRow([L[2], L[0], ...matrix[li].map(round2), round2(rowTotal)]);
+  });
+  ws0.addRow(['Column Total','', ...colTotals.map(round2), round2(grandTotal)]).font = {bold:true};
+  ws0.getColumn(1).width = 16; ws0.getColumn(2).width = 13;
+  BRANCHES.forEach((b,i)=> ws0.getColumn(i+3).width = 13);
+  ws0.getColumn(BRANCHES.length+3).width = 14;
+
+  // ---- Sheets 2 onward: one Summary sheet per ledger, plus one Difference sheet per mismatched branch pair ----
+  const sheetName = makeSheetNamer(['Matrix']);
+
+  LEDGERS.forEach(L => {
+    addSummarySheet(wb, sheetName(`${L[2]} Summary`), L, records);
+
+    const breaks = computeLedgerBreaks(L, records);
+    if (!breaks.length){
+      wb.addWorksheet(sheetName(`${L[2]} Difference`)).addRow([`${L[2]}: fully reconciled — no mismatches above ₹1.`]);
+    } else {
+      breaks.forEach(b => {
+        addPairSheet(wb, sheetName(`${b.counterpartyBranch} vs ${L[2]}`), L[2], b.counterpartyBranch, b.exactItems, b.exactTotal);
+      });
+    }
+  });
+
+  const today = new Date().toISOString().slice(0,10);
+  await downloadWorkbookExcelJS(wb, `Fund Transfer Reconciliation - ${today}.xlsx`);
+}
+
+function downloadCsv(){
+  const matrix = window.__lastMatrix;
+  if (!matrix) return;
+  let csv = 'Home Branch,' + BRANCHES.map(b=>b[1]).join(',') + ',Total\n';
+  LEDGERS.forEach((L, li) => {
+    const rowTotal = matrix[li].reduce((a,b)=>a+b,0);
+    csv += '"' + L[2] + '",' + matrix[li].map(v=>v.toFixed(2)).join(',') + ',' + rowTotal.toFixed(2) + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fund_transfer_reconciliation.csv';
+  a.click();
+}
+
+// ---- login ----
+const VALID_USER = 'admin';
+const VALID_PASS = 'admin123';
+
+function attemptLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  if (u === VALID_USER && p === VALID_PASS){
+    err.style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+  } else {
+    err.style.display = 'block';
+  }
+}
+document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+});
+
+// If opened from the Reconciliation Hub (which already handled the login), skip this screen too.
+if (new URLSearchParams(location.search).get('auth') === '1'){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+}
+
+// ---- upload / reconcile wiring ----
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+dropzone.addEventListener('drop', e => { if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+document.getElementById('reconcileBtn').addEventListener('click', () => {
+  if (!window.__pendingRecords){ showError('Please upload a file first.'); return; }
+  buildMatrix(window.__pendingRecords);
+});
+
+document.getElementById('downloadCsv').addEventListener('click', downloadCsv);
+document.getElementById('downloadExcel').addEventListener('click', downloadExcelReport);
+
+document.getElementById('clearFileBtn').addEventListener('click', () => {
+  window.__pendingRecords = null;
+  fileInput.value = '';
+  document.getElementById('fileInfo').textContent = '';
+  document.getElementById('reconcileBtn').disabled = true;
+  document.getElementById('results').style.display = 'none';
+  showError('');
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('fileInfo').textContent = '';
+  window.__pendingRecords = null;
+  document.getElementById('reconcileBtn').disabled = true;
+  fileInput.value = '';
+});
 </script>
 </body>
 </html>
