@@ -1,954 +1,922 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>QR Scanner · Drive Sync</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<title>Fund Transfer Reconciliation Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap');
-
-  :root {
-    --bg:#0a0a0f; --surface:#12121a; --card:#1a1a26; --border:#2a2a3d;
-    --accent:#00e5a0; --accent2:#7b5cff; --text:#e8e8f0; --muted:#6b6b8a;
-    --danger:#ff4d6d; --warn:#ffbe0b; --drive:#1fa463;
+  :root{
+    --navy:#1F4E78; --navy-dark:#123049; --red-bg:#FFC7CE; --red-txt:#9C0006;
+    --green-bg:#E2EFDA; --green-txt:#375623; --grey:#f4f6f8; --border:#d9dee3;
+    --page-bg:#fafbfc; --card-bg:#fff; --text-main:#222; --text-sub:#666;
+    --label-bg:#eef2f5; --hover-bg:#eef4f9; --dropzone-bg:#f7fafc; --totalrow-bg:#dde6ee;
+    --heading-txt:#123049; --muted-txt:#aaa; --disabled-bg:#b7c3cd; --detail-bg:#fbfcfd;
   }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
-  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% 10%,#7b5cff18,transparent),radial-gradient(ellipse 60% 40% at 80% 80%,#00e5a012,transparent);pointer-events:none;z-index:0;}
-  .app{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:16px;}
+  [data-theme="dark"]{
+    --navy:#3d7ab5; --navy-dark:#295a86; --red-bg:#4a2020; --red-txt:#ff8a8a;
+    --green-bg:#1e3a24; --green-txt:#8fd39f; --grey:#1c2740; --border:#2e3f60;
+    --page-bg:#0c1220; --card-bg:#161e2e; --text-main:#e7ecf3; --text-sub:#9fb0c8;
+    --label-bg:#1c2740; --hover-bg:#20304d; --dropzone-bg:#182234; --totalrow-bg:#233252;
+    --heading-txt:#7ec4f0; --muted-txt:#7d8aa3; --disabled-bg:#334159; --detail-bg:#101828;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:Calibri,Arial,sans-serif;margin:0;padding:24px;background:var(--page-bg);color:var(--text-main);transition:background .15s,color .15s;}
+  h1{font-size:22px;color:var(--heading-txt);margin:0 0 4px;}
+  .sub{color:var(--text-sub);font-size:13px;margin-bottom:20px;}
+  .card{background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;}
+  .dropzone{border:2px dashed var(--navy);border-radius:8px;padding:36px;text-align:center;cursor:pointer;background:var(--dropzone-bg);transition:background .15s;}
+  .dropzone:hover{background:var(--hover-bg);}
+  .dropzone.drag{background:var(--hover-bg);}
+  .dropzone p{margin:6px 0;color:var(--text-main);}
+  .dropzone .hint{font-size:12px;color:var(--text-sub);}
+  input[type=file]{display:none;}
+  button{background:var(--navy);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer;}
+  button:hover{background:var(--navy-dark);}
+  button.secondary{background:var(--card-bg);color:var(--heading-txt);border:1px solid var(--heading-txt);}
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  table{border-collapse:collapse;width:100%;font-size:12px;}
+  th,td{border:1px solid var(--border);padding:5px 7px;text-align:right;white-space:nowrap;}
+  th{background:var(--navy);color:#fff;position:sticky;top:0;}
+  td.label,th.label{text-align:left;position:sticky;left:0;background:var(--label-bg);font-weight:600;z-index:2;}
+  th.label{background:var(--navy);color:#fff;z-index:3;}
+  .matrix-wrap{overflow:auto;max-height:520px;border:1px solid var(--border);border-radius:6px;}
+  .mismatch{background:var(--red-bg);color:var(--red-txt);font-weight:600;}
+  .zero{color:var(--muted-txt);}
+  .totalrow td, .totalrow th{background:var(--totalrow-bg);font-weight:700;}
+  .totalcol{background:var(--totalrow-bg);font-weight:700;}
+  #error{color:var(--red-txt);background:var(--red-bg);padding:10px 14px;border-radius:6px;margin-bottom:14px;display:none;}
+  #summary{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .stat{background:var(--grey);border:1px solid var(--border);border-radius:8px;padding:12px 18px;min-width:160px;}
+  .stat .num{font-size:20px;font-weight:700;color:var(--heading-txt);}
+  .stat .lbl{font-size:12px;color:var(--text-sub);}
+  details summary{cursor:pointer;font-weight:600;color:var(--heading-txt);margin-bottom:8px;}
+  .mismatch-list{font-size:13px;}
+  .mismatch-list li{margin-bottom:4px;}
+  .badge{display:inline-block;background:var(--navy);color:#fff;border-radius:10px;padding:1px 8px;font-size:11px;margin-left:8px;}
+  .ledger-item{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;}
+  .ledger-item:last-child{border-bottom:none;}
+  .ledger-item:hover{background:var(--hover-bg);}
+  .ledger-item.active{background:var(--navy);color:#fff;}
+  .ledger-item .sub{font-size:11px;color:var(--text-sub);}
+  .ledger-item.active .sub{color:#dce8f2;}
+  .ledger-item .mismatch-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C0392B;margin-right:6px;}
+  .ledger-item.active .mismatch-dot{background:#ffb3b3;}
+  button:disabled{background:var(--disabled-bg);cursor:not-allowed;}
+  #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .login-box{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:36px 40px;width:320px;box-shadow:0 4px 18px rgba(0,0,0,.06);}
+  .login-box h2{margin:0 0 4px;color:var(--heading-txt);font-size:19px;}
+  .login-box .sub{margin-bottom:20px;}
+  .login-box label{display:block;font-size:12px;color:var(--text-sub);margin:12px 0 4px;}
+  .login-box input[type=text],.login-box input[type=password]{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--card-bg);color:var(--text-main);}
+  .login-box button{width:100%;margin-top:18px;padding:10px;}
+  #loginError{color:var(--red-txt);background:var(--red-bg);padding:8px 10px;border-radius:6px;font-size:12px;margin-top:12px;display:none;}
+  #logoutBar{display:flex;justify-content:flex-end;margin-bottom:6px;}
+  #logoutBar button{font-size:12px;padding:5px 12px;}
 
-  /* HEADER */
-  header{display:flex;align-items:center;gap:12px;padding:20px 0 24px;}
-  .logo-mark{width:42px;height:42px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:12px;display:grid;place-items:center;font-size:20px;flex-shrink:0;}
-  header h1{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px;line-height:1.2;}
-  header span{color:var(--accent);}
-  .subtitle{font-size:0.72rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
+  /* ── floating nav (Home / Back) ── */
+  .floating-nav{position:fixed;top:14px;left:14px;z-index:10000;display:flex;gap:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:30px;padding:6px 8px;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  .floating-nav button{background:transparent;color:var(--heading-txt);border:none;padding:6px 10px;font-size:12px;border-radius:20px;display:flex;align-items:center;gap:4px;}
+  .floating-nav button:hover{background:var(--hover-bg);}
+  [data-theme="dark"] .floating-nav button{color:var(--text-main);}
 
-  /* SETUP CARD */
-  .setup-card{background:var(--card);border:1px solid var(--accent2);border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
-  .setup-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#7b5cff0a,#00e5a008);pointer-events:none;}
-  .setup-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .setup-title{display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:800;color:var(--accent2);}
-  .setup-toggle{background:none;border:1px solid var(--border);color:var(--muted);font-size:0.72rem;cursor:pointer;font-family:'Space Mono',monospace;padding:4px 10px;border-radius:8px;transition:all 0.2s;}
-  .setup-toggle:hover{color:var(--accent2);border-color:var(--accent2);}
-  .setup-status{display:flex;align-items:center;gap:8px;font-size:0.78rem;font-family:'Space Mono',monospace;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);margin-bottom:14px;}
-  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .dot.ok{background:var(--accent);box-shadow:0 0 6px var(--accent);}
-  .dot.warn{background:var(--warn);box-shadow:0 0 6px var(--warn);animation:pdot 1.4s infinite;}
-  @keyframes pdot{0%,100%{opacity:1}50%{opacity:0.3}}
-  .url-row{display:flex;gap:8px;margin-bottom:10px;}
-  .url-row input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.72rem;outline:none;transition:border-color 0.2s;}
-  .url-row input:focus{border-color:var(--accent2);}
-  .url-row input::placeholder{color:var(--muted);}
-  .setup-body{margin-top:16px;}
-  .setup-body.hidden{display:none;}
-  .setup-steps{list-style:none;margin-bottom:14px;}
-  .setup-steps li{display:flex;gap:10px;align-items:flex-start;font-size:0.8rem;color:var(--muted);line-height:1.5;margin-bottom:10px;}
-  .step-num{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--accent2);color:#fff;font-size:0.65rem;font-weight:800;display:grid;place-items:center;margin-top:1px;}
-  .setup-steps li b{color:var(--text);}
-  .setup-steps li code{font-family:'Space Mono',monospace;font-size:0.7rem;background:var(--surface);border:1px solid var(--border);padding:1px 6px;border-radius:4px;color:var(--accent);}
-  .script-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;}
-  .script-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;}
-  .copy-btn{background:var(--accent2);border:none;color:#fff;font-size:0.68rem;padding:4px 12px;border-radius:6px;cursor:pointer;font-family:'Space Mono',monospace;}
-  pre{font-family:'Space Mono',monospace;font-size:0.67rem;color:#a0a0c0;white-space:pre-wrap;line-height:1.65;}
+  /* ── theme toggle (bottom-right) ── */
+  .theme-toggle-corner{position:fixed;bottom:14px;right:14px;z-index:10000;display:flex;gap:6px;background:var(--card-bg);border:1px solid var(--border);border-radius:30px;padding:6px 8px;box-shadow:0 4px 14px rgba(0,0,0,.12);}
+  .theme-toggle-corner button{background:transparent;color:var(--heading-txt);border:none;padding:6px 10px;font-size:12px;border-radius:20px;display:flex;align-items:center;gap:4px;}
+  .theme-toggle-corner button:hover{background:var(--hover-bg);}
+  [data-theme="dark"] .theme-toggle-corner button{color:var(--text-main);}
 
-  /* DRIVE CARD */
-  .drive-card{background:var(--card);border:1px solid #1fa46340;border-radius:20px;padding:20px;margin-bottom:16px;position:relative;overflow:hidden;}
-  .drive-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#1fa46310,transparent);pointer-events:none;}
-  .drive-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-  .drive-title{display:flex;align-items:center;gap:8px;font-size:0.9rem;font-weight:800;color:var(--drive);}
-  .drive-subtitle{font-size:0.7rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;}
-  .drive-folder-row{display:flex;gap:8px;margin-bottom:12px;}
-  .drive-folder-row input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Space Mono',monospace;font-size:0.72rem;outline:none;transition:border-color 0.2s;}
-  .drive-folder-row input:focus{border-color:var(--drive);}
-  .drive-folder-row input::placeholder{color:var(--muted);}
-  .btn-drive{background:var(--drive);border:none;color:#fff;font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;padding:10px 16px;border-radius:10px;cursor:pointer;transition:all 0.18s;white-space:nowrap;}
-  .btn-drive:hover{background:#24c278;transform:translateY(-1px);}
-  .btn-drive:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
-  .drive-status{display:flex;align-items:center;gap:8px;font-size:0.75rem;font-family:'Space Mono',monospace;padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);margin-bottom:12px;}
-
-  /* DRIVE FILE LIST */
-  .drive-files{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-  .drive-files-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
-  .drive-files-title{font-size:0.75rem;font-family:'Space Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
-  .drive-refresh{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:2px 6px;border-radius:6px;transition:color 0.2s;}
-  .drive-refresh:hover{color:var(--accent);}
-  .drive-file-list{max-height:280px;overflow-y:auto;}
-  .drive-file-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);transition:background 0.15s;}
-  .drive-file-item:last-child{border-bottom:none;}
-  .drive-file-item:hover{background:#ffffff06;}
-  .drive-file-icon{font-size:1.1rem;flex-shrink:0;}
-  .drive-file-info{flex:1;min-width:0;}
-  .drive-file-name{font-size:0.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .drive-file-meta{font-size:0.66rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:2px;}
-  .drive-file-actions{display:flex;gap:6px;flex-shrink:0;}
-  .dfa-btn{padding:5px 10px;border-radius:7px;border:none;font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.15s;}
-  .dfa-view{background:var(--surface);color:var(--accent2);border:1px solid var(--accent2);}
-  .dfa-view:hover{background:var(--accent2);color:#fff;}
-  .dfa-dl{background:var(--drive);color:#fff;}
-  .dfa-dl:hover{background:#24c278;}
-  .dfa-del{background:transparent;border:1px solid var(--danger);color:var(--danger);}
-  .dfa-del:hover{background:var(--danger);color:#fff;}
-  .drive-empty{padding:28px;text-align:center;color:var(--muted);font-size:0.82rem;}
-  .drive-loading{padding:20px;text-align:center;color:var(--muted);font-size:0.78rem;font-family:'Space Mono',monospace;}
-  .drive-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin-right:6px;vertical-align:middle;}
-  @keyframes spin{to{transform:rotate(360deg)}}
-
-  /* FORM */
-  .form-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;margin-bottom:16px;}
-  .form-card h2{font-size:0.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px;}
-  .field{margin-bottom:12px;}
-  .field label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace;}
-  .field input,.field textarea{width:100%;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.2s;}
-  .field input:focus,.field textarea:focus{border-color:var(--accent2);}
-  .field textarea{resize:none;height:72px;}
-
-  /* SCANNER */
-  .scanner-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:16px;}
-  .scanner-header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
-  .scanner-header h2{font-size:0.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-  .badge{font-size:0.7rem;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:99px;background:var(--surface);border:1px solid var(--border);}
-  .badge.live{color:var(--accent);border-color:var(--accent);animation:pbadge 1.5s infinite;}
-  .badge.idle{color:var(--muted);}
-  @keyframes pbadge{0%,100%{opacity:1}50%{opacity:0.4}}
-  #qr-reader{width:100%!important;border:none!important;background:#000;}
-  #qr-reader video{width:100%!important;border-radius:0!important;}
-  #qr-reader__scan_region{background:#000;}
-  #qr-reader__dashboard{display:none!important;}
-  .scan-controls{padding:14px 20px;display:flex;gap:10px;}
-  .manual-area{padding:0 20px 16px;}
-  .manual-row{display:flex;gap:8px;}
-  .manual-row input{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;color:var(--text);font-family:'Syne',sans-serif;font-size:0.9rem;outline:none;transition:border-color 0.2s;}
-  .manual-row input:focus{border-color:var(--accent);}
-  .manual-row .btn{flex:0 0 auto;width:44px;height:44px;padding:0;border-radius:10px;font-size:1.2rem;}
-
-  /* BUTTONS */
-  .btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.18s;display:flex;align-items:center;justify-content:center;gap:7px;}
-  .btn-primary{background:var(--accent);color:#000;}
-  .btn-primary:hover{background:#00ffb3;transform:translateY(-1px);}
-  .btn-danger{background:transparent;border:1.5px solid var(--danger);color:var(--danger);}
-  .btn-danger:hover{background:var(--danger);color:#fff;}
-  .btn-ghost{background:var(--surface);color:var(--muted);border:1.5px solid var(--border);}
-  .btn-ghost:hover{color:var(--text);border-color:var(--accent2);}
-  .btn-accent2{background:var(--accent2);color:#fff;border:none;}
-  .btn-accent2:hover{background:#9370ff;transform:translateY(-1px);}
-  .btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important;}
-
-  /* TOAST */
-  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--accent);color:#000;font-weight:700;font-size:0.85rem;padding:10px 22px;border-radius:99px;transition:transform 0.3s cubic-bezier(.34,1.56,.64,1);z-index:9999;white-space:nowrap;font-family:'Space Mono',monospace;box-shadow:0 4px 24px #00e5a040;}
-  #toast.show{transform:translateX(-50%) translateY(0);}
-  #toast.error{background:var(--danger);color:#fff;}
-  #toast.warn{background:var(--warn);color:#000;}
-
-  /* TAB SWITCHER */
-  .tab-bar{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
-  .tab-btn{flex:1;padding:11px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Syne',sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.18s;min-width:90px;}
-  .tab-btn.active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
-  .tab-btn:hover:not(.active){color:var(--text);border-color:var(--accent2);}
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;}
-
-  /* BY PERSON CARDS */
-  .people-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px;}
-  .person-card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;transition:border-color 0.2s;}
-  .person-card:hover{border-color:var(--accent2);}
-  .person-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none;}
-  .person-avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:1rem;font-weight:800;flex-shrink:0;color:#fff;}
-  .person-info{flex:1;min-width:0;}
-  .person-name{font-size:0.95rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .person-meta{font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--muted);margin-top:2px;}
-  .person-actions{display:flex;gap:6px;flex-shrink:0;}
-  .p-btn{padding:6px 10px;border-radius:9px;border:none;font-family:'Syne',sans-serif;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.16s;display:flex;align-items:center;gap:4px;white-space:nowrap;}
-  .p-btn-dl{background:var(--accent);color:#000;}
-  .p-btn-dl:hover{background:#00ffb3;transform:translateY(-1px);}
-  .p-btn-drive{background:var(--drive);color:#fff;}
-  .p-btn-drive:hover{background:#24c278;transform:translateY(-1px);}
-  .p-btn-del{background:transparent;border:1.5px solid var(--danger);color:var(--danger);}
-  .p-btn-del:hover{background:var(--danger);color:#fff;}
-  .chevron{font-size:0.75rem;color:var(--muted);transition:transform 0.25s;flex-shrink:0;}
-  .person-header.open .chevron{transform:rotate(180deg);}
-  .person-rows{border-top:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height 0.3s ease;}
-  .person-rows.open{max-height:600px;}
-  .person-table-wrap{overflow-x:auto;}
-  table.ptable{width:100%;border-collapse:collapse;font-size:0.8rem;}
-  table.ptable thead th{background:var(--surface);padding:8px 12px;text-align:left;font-family:'Space Mono',monospace;font-size:0.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;position:sticky;top:0;}
-  table.ptable tbody tr{border-bottom:1px solid var(--border);}
-  table.ptable tbody tr:last-child{border-bottom:none;}
-  table.ptable tbody td{padding:9px 12px;vertical-align:middle;}
-  .pt-qr{font-family:'Space Mono',monospace;color:var(--accent2);font-size:0.73rem;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .pt-reason{color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .pt-time{color:var(--muted);font-family:'Space Mono',monospace;font-size:0.66rem;white-space:nowrap;}
-  .pt-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.9rem;padding:2px 5px;border-radius:5px;transition:color 0.2s;}
-  .pt-del:hover{color:var(--danger);}
-  .people-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:0.85rem;background:var(--card);border:1px solid var(--border);border-radius:18px;}
-  .people-empty .icon{font-size:2.5rem;margin-bottom:10px;opacity:0.4;}
-
-  /* ALL RECORDS TAB */
-  .log-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:16px;}
-  .log-header{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
-  .log-header h2{font-size:0.85rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
-  .log-right{display:flex;align-items:center;gap:8px;}
-  .log-count{font-size:0.72rem;font-family:'Space Mono',monospace;color:var(--accent);background:#00e5a015;border:1px solid #00e5a030;padding:3px 10px;border-radius:99px;}
-  .cloud-pill{font-size:0.7rem;font-family:'Space Mono',monospace;padding:3px 9px;border-radius:99px;}
-  .cloud-pill.on{color:var(--accent);background:#00e5a010;border:1px solid #00e5a040;}
-  .cloud-pill.off{color:var(--muted);background:var(--surface);border:1px solid var(--border);}
-  .table-wrap{overflow-x:auto;max-height:360px;overflow-y:auto;}
-  table.atable{width:100%;border-collapse:collapse;font-size:0.82rem;}
-  table.atable thead th{background:var(--surface);padding:10px 10px;text-align:left;font-family:'Space Mono',monospace;font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;position:sticky;top:0;z-index:1;}
-  table.atable tbody tr{border-bottom:1px solid var(--border);animation:rin 0.3s ease;}
-  @keyframes rin{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
-  table.atable tbody tr:last-child{border-bottom:none;}
-  table.atable tbody td{padding:10px 10px;vertical-align:middle;}
-  .td-name{font-weight:600;color:var(--text);}
-  .td-qr{font-family:'Space Mono',monospace;color:var(--accent2);font-size:0.73rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .td-reason{color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .td-time{color:var(--muted);font-family:'Space Mono',monospace;font-size:0.66rem;white-space:nowrap;}
-  .td-sync{text-align:center;font-size:0.78rem;}
-  .del-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;padding:2px 4px;border-radius:6px;transition:color 0.2s;}
-  .del-btn:hover{color:var(--danger);}
-  .empty-state{padding:40px 20px;text-align:center;color:var(--muted);font-size:0.85rem;}
-  .empty-state .icon{font-size:2.5rem;margin-bottom:10px;opacity:0.4;}
-  .actions{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
-  .actions .btn{min-width:100px;font-size:0.8rem;padding:10px 12px;}
-
-  /* MODAL */
-  .modal-overlay{position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,16px);opacity:0;pointer-events:none;transition:opacity 0.22s ease;}
-  .modal-overlay.open{opacity:1;pointer-events:all;}
-  .modal-box{background:var(--card);border:1px solid var(--border);border-radius:24px 24px 18px 18px;padding:28px 24px 20px;width:100%;max-width:480px;transform:translateY(40px);transition:transform 0.28s cubic-bezier(.34,1.56,.64,1);text-align:center;}
-  .modal-overlay.open .modal-box{transform:translateY(0);}
-  .modal-icon{font-size:2.2rem;margin-bottom:10px;}
-  .modal-title{font-size:1.1rem;font-weight:800;margin-bottom:6px;}
-  .modal-desc{font-size:0.83rem;color:var(--muted);margin-bottom:22px;line-height:1.5;}
-  .modal-actions{display:flex;gap:10px;}
-  .modal-actions .btn{font-size:0.9rem;padding:13px;}
-
-  /* FILE PREVIEW MODAL */
-  .preview-overlay{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity 0.22s;}
-  .preview-overlay.open{opacity:1;pointer-events:all;}
-  .preview-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:0;width:100%;max-width:500px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;transform:scale(0.95);transition:transform 0.25s cubic-bezier(.34,1.56,.64,1);}
-  .preview-overlay.open .preview-box{transform:scale(1);}
-  .preview-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-  .preview-title{font-size:0.85rem;font-weight:800;color:var(--text);max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .preview-close{background:var(--surface);border:1px solid var(--border);color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:1rem;display:grid;place-items:center;}
-  .preview-close:hover{color:var(--danger);border-color:var(--danger);}
-  .preview-content{padding:16px;overflow:auto;flex:1;}
-  .preview-table{width:100%;border-collapse:collapse;font-size:0.78rem;}
-  .preview-table thead th{background:var(--surface);padding:8px 10px;text-align:left;font-family:'Space Mono',monospace;font-size:0.64rem;color:var(--muted);text-transform:uppercase;position:sticky;top:0;}
-  .preview-table tbody tr{border-bottom:1px solid var(--border);}
-  .preview-table tbody tr:last-child{border-bottom:none;}
-  .preview-table tbody td{padding:8px 10px;color:var(--text);}
-  .preview-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
-  .preview-footer .btn{font-size:0.82rem;padding:10px;}
-
-  ::-webkit-scrollbar{width:4px;height:4px;}
-  ::-webkit-scrollbar-track{background:transparent;}
-  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+  /* ── logo badge (bottom-left) ── */
+  .logo-badge{position:fixed;bottom:14px;left:14px;z-index:10000;display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--navy-dark),var(--navy));color:#fff;border-radius:30px;padding:8px 14px 8px 10px;box-shadow:0 4px 14px rgba(0,0,0,.18);font-size:12px;}
+  .logo-badge .crown{font-size:16px;line-height:1;}
+  .logo-badge .initials{font-weight:800;font-size:14px;letter-spacing:.5px;}
+  .logo-badge .who{font-size:9px;color:#cfe0ee;line-height:1.1;}
 </style>
 </head>
 <body>
-<div class="app">
 
-  <header>
-    <div class="logo-mark">⬛</div>
-    <div>
-      <h1>QR <span>Scanner</span> + Drive</h1>
-      <div class="subtitle">scan · record · sheets sync · drive files</div>
-    </div>
-  </header>
+<div class="floating-nav">
+  <button onclick="location.href='./Pothys Reconciliation Hub.html'" title="Go to Hub">🏠 Home</button>
+  <button onclick="history.back()" title="Go back">← Back</button>
+</div>
+<div class="theme-toggle-corner">
+  <button onclick="setTheme('light')" title="Light mode">☀️ Light</button>
+  <button onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+</div>
+<div class="logo-badge">
+  <span class="crown">👑</span>
+  <span><span class="initials">SK</span><br><span class="who">Karthick</span></span>
+</div>
 
-  <!-- SETUP CARD (pre-filled) -->
-  <div class="setup-card">
-    <div class="setup-top">
-      <div class="setup-title">🟢 Google Sheets Sync</div>
-      <button class="setup-toggle" id="guide-btn" onclick="toggleGuide()">▼ How to Set Up</button>
-    </div>
-    <div class="setup-status">
-      <span class="dot ok" id="status-dot"></span>
-      <span id="status-text">☁ Connected — scans sync to Google Sheets</span>
-    </div>
-    <div class="url-row">
-      <input id="inp-url" type="text" placeholder="Paste Google Apps Script Web App URL…" value="https://script.google.com/macros/s/AKfycbwXk4jMLIA2_VkcysUGvfvPH8nrYpvktXTgi6tIEDyibxjKsMb9dQQ8XsXFIIFGchz6/exec">
-      <button class="btn btn-accent2" onclick="saveUrl()" style="flex:0 0 auto;padding:0 18px;border-radius:10px;font-size:0.85rem;">Save</button>
-    </div>
-    <div class="setup-body hidden" id="guide-body">
-      <br>
-      <ul class="setup-steps">
-        <li><span class="step-num">1</span><span>Open <b>Google Sheets</b>, create a new spreadsheet. Rename sheet tab to <code>Scans</code>.</span></li>
-        <li><span class="step-num">2</span><span>Add headers in row 1: <code>No</code> <code>Name</code> <code>QR Value</code> <code>Reason</code> <code>Timestamp</code></span></li>
-        <li><span class="step-num">3</span><span><b>Extensions → Apps Script</b> → paste the script below → 💾 Save.</span></li>
-        <li><span class="step-num">4</span><span><b>Deploy → New Deployment → Web App</b>. Execute as: <b>Me</b>. Access: <b>Anyone</b>. Deploy &amp; authorize.</span></li>
-        <li><span class="step-num">5</span><span>Copy the <b>Web App URL</b> → paste above → Save. ✓</span></li>
-        <li><span class="step-num">6</span><span>For <b>Drive file saving</b>, use the extended script below — it handles saving CSVs to your Drive folder too.</span></li>
-      </ul>
-      <div class="script-box">
-        <div class="script-header">APPS SCRIPT (with Drive support) <button class="copy-btn" onclick="copyScript()">📋 Copy</button></div>
-        <pre id="script-pre">function doPost(e) {
-  try {
-    var d = JSON.parse(e.postData.contents);
-
-    // ── Handle CSV save to Drive ──────────────────
-    if (d.action === 'saveCSV') {
-      var folder = DriveApp.getFolderById(d.folderId);
-      var blob   = Utilities.newBlob(d.csv, 'text/csv', d.filename);
-      var file   = folder.createFile(blob);
-      return ContentService
-        .createTextOutput(JSON.stringify({
-          status:'ok',
-          fileId: file.getId(),
-          fileName: file.getName(),
-          webViewLink: file.getUrl()
-        }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ── Handle list files in folder ───────────────
-    if (d.action === 'listFiles') {
-      var folder = DriveApp.getFolderById(d.folderId);
-      var files  = folder.getFilesByType('text/csv');
-      var list   = [];
-      while (files.hasNext()) {
-        var f = files.next();
-        list.push({
-          id:       f.getId(),
-          name:     f.getName(),
-          size:     f.getSize(),
-          modified: f.getLastUpdated().toLocaleString(),
-          url:      f.getUrl()
-        });
-      }
-      list.sort((a,b)=> b.modified.localeCompare(a.modified));
-      return ContentService
-        .createTextOutput(JSON.stringify({status:'ok', files: list}))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ── Handle delete file ────────────────────────
-    if (d.action === 'deleteFile') {
-      var file = DriveApp.getFileById(d.fileId);
-      file.setTrashed(true);
-      return ContentService
-        .createTextOutput(JSON.stringify({status:'ok'}))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ── Handle get file content (preview) ─────────
-    if (d.action === 'getFile') {
-      var file    = DriveApp.getFileById(d.fileId);
-      var content = file.getBlob().getDataAsString('UTF-8');
-      return ContentService
-        .createTextOutput(JSON.stringify({status:'ok', content: content, name: file.getName()}))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // ── Default: append row to Sheet ─────────────
-    var sheet = SpreadsheetApp
-      .getActiveSpreadsheet()
-      .getSheetByName('Scans');
-    var no = Math.max(sheet.getLastRow(), 1);
-    sheet.appendRow([no, d.name||'', d.qr||'', d.reason||'', d.time||new Date().toLocaleString()]);
-    return ContentService
-      .createTextOutput(JSON.stringify({status:'ok'}))
-      .setMimeType(ContentService.MimeType.JSON);
-
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({status:'error', msg: err.message}))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}</pre>
-      </div>
-    </div>
-  </div>
-
-  <!-- GOOGLE DRIVE CARD (pre-filled) -->
-  <div class="drive-card">
-    <div class="drive-header-row">
-      <div>
-        <div class="drive-title">📁 Google Drive Files</div>
-        <div class="drive-subtitle">View · Download · Delete CSV files from your Drive folder</div>
-      </div>
-    </div>
-    <div class="drive-status">
-      <span class="dot ok" id="drive-dot"></span>
-      <span id="drive-status-text">📁 Folder set — browsing CSVs</span>
-    </div>
-    <div class="drive-folder-row">
-      <input id="inp-folder-id" type="text" placeholder="Drive Folder ID (from folder URL)…" value="1NvNb5v1rLsMutPsjXQ1UADiUiq7vNey9">
-      <button class="btn-drive" onclick="saveFolderId()">Save</button>
-    </div>
-    <div style="font-size:0.68rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:14px;">
-      📌 Folder ID is the part after <code style="color:var(--accent)">/folders/</code> in the Drive URL
-    </div>
-
-    <div class="drive-files">
-      <div class="drive-files-header">
-        <span class="drive-files-title">📄 CSV Files in Folder</span>
-        <button class="drive-refresh" onclick="loadDriveFiles()" title="Refresh">↻</button>
-      </div>
-      <div id="drive-file-list" class="drive-file-list">
-        <div class="drive-loading"><span class="drive-spinner"></span>Loading files...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ENTRY FORM -->
-  <div class="form-card">
-    <h2>📋 Entry Details</h2>
-    <div class="field">
-      <label>WHO IS SCANNING?</label>
-      <input type="text" id="inp-name" placeholder="e.g. John Smith" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>REASON / VALUE / NOTE</label>
-      <textarea id="inp-reason" placeholder="e.g. Inventory check, Attendance, Asset #A-42…"></textarea>
-    </div>
-  </div>
-
-  <!-- SCANNER -->
-  <div class="scanner-card">
-    <div class="scanner-header">
-      <h2>📷 Camera Scanner</h2>
-      <span class="badge idle" id="scan-badge">IDLE</span>
-    </div>
-    <div id="qr-reader"></div>
-    <div class="scan-controls">
-      <button class="btn btn-primary" id="btn-start" onclick="startScan()">▶ Start Camera</button>
-      <button class="btn btn-danger"  id="btn-stop"  onclick="stopScan()" disabled>■ Stop</button>
-    </div>
-    <div class="manual-area">
-      <div class="manual-row">
-        <input type="text" id="inp-manual" placeholder="Or type / paste QR value manually…" autocomplete="off" onkeydown="if(event.key==='Enter')addManual()">
-        <button class="btn btn-ghost" onclick="addManual()">＋</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB SWITCHER -->
-  <div class="tab-bar">
-    <button class="tab-btn active" id="tab-people-btn" onclick="switchTab('people')">👤 By Person</button>
-    <button class="tab-btn"        id="tab-all-btn"    onclick="switchTab('all')">📋 All Records</button>
-  </div>
-
-  <!-- TAB: BY PERSON -->
-  <div class="tab-panel active" id="tab-people">
-    <div class="people-list" id="people-list">
-      <div class="people-empty">
-        <div class="icon">👤</div>
-        No scans yet — scans will group here by person name
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB: ALL RECORDS -->
-  <div class="tab-panel" id="tab-all">
-    <div class="log-card">
-      <div class="log-header">
-        <h2>📊 All Records</h2>
-        <div class="log-right">
-          <span class="cloud-pill on" id="cloud-pill">☁ Cloud</span>
-          <span class="log-count" id="log-count">0 entries</span>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table class="atable">
-          <thead><tr><th>#</th><th>Name</th><th>QR Value</th><th>Reason</th><th>Time</th><th>☁</th><th></th></tr>
-          </thead>
-          <tbody id="log-body"></tbody>
-        </table>
-        <div class="empty-state" id="empty-state">
-          <div class="icon">🔲</div>No scans yet
-        </div>
-      </div>
-    </div>
-    <div class="actions">
-      <button class="btn btn-primary" id="btn-csv"       onclick="downloadAllCSV()"  disabled>⬇ CSV</button>
-      <button class="btn btn-drive"   id="btn-drive-all" onclick="saveAllToDrive()"  disabled style="background:var(--drive);color:#fff;border:none;">📁 Save to Drive</button>
-      <button class="btn btn-ghost"   id="btn-sync"      onclick="retrySyncAll()"    disabled>↑ Sync</button>
-      <button class="btn btn-ghost"   id="btn-clear"     onclick="clearLog()"        disabled>🗑 Clear</button>
-    </div>
-  </div>
-
-</div><!-- /app -->
-
-<div id="toast"></div>
-
-<!-- CONFIRM MODAL -->
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-icon"  id="modal-icon">🗑</div>
-    <div class="modal-title" id="modal-title">Are you sure?</div>
-    <div class="modal-desc"  id="modal-desc">This cannot be undone.</div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost"  onclick="closeModal()">Cancel</button>
-      <button class="btn btn-danger" id="modal-ok" onclick="runModalFn()">Confirm</button>
-    </div>
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>Fund Transfer Reconciliation Portal</h2>
+    <div class="sub" style="font-size:12px;">Sign in to continue</div>
+    <label for="loginUser">Username</label>
+    <input type="text" id="loginUser" autocomplete="username">
+    <label for="loginPass">Password</label>
+    <input type="password" id="loginPass" autocomplete="current-password">
+    <div id="loginError">Invalid username or password.</div>
+    <button id="loginBtn">Sign In</button>
   </div>
 </div>
 
-<!-- FILE PREVIEW MODAL -->
-<div class="preview-overlay" id="preview-overlay">
-  <div class="preview-box">
-    <div class="preview-header">
-      <div class="preview-title" id="preview-title">File Preview</div>
-      <button class="preview-close" onclick="closePreview()">✕</button>
-    </div>
-    <div class="preview-content" id="preview-content">
-      <div class="drive-loading"><span class="drive-spinner"></span>Loading…</div>
-    </div>
-    <div class="preview-footer">
-      <button class="btn btn-primary"  id="preview-dl-btn"  onclick="downloadPreviewFile()">⬇ Download</button>
-      <button class="btn btn-danger"   id="preview-del-btn" onclick="deletePreviewFile()">🗑 Delete</button>
-      <button class="btn btn-ghost"    onclick="closePreview()">Close</button>
-    </div>
+<div id="mainApp" style="display:none;">
+<div id="logoutBar"><button class="secondary" id="logoutBtn">Log out</button></div>
+<h1>Fund Transfer Reconciliation Portal</h1>
+<div class="sub">Upload a Data extract (same columns as the "Data" tab of your Fund Transfer workbook), then start the reconciliation &mdash; no formulas to maintain.</div>
+
+<div class="card">
+  <div class="dropzone" id="dropzone">
+    <p><strong>Click to choose a file</strong> or drag &amp; drop it here</p>
+    <p class="hint">.xlsx, .xls or .csv &mdash; must contain columns: Amount in Local Currency, Segment, G/L Account, GL Description</p>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+  </div>
+  <div id="error"></div>
+  <div id="fileInfo" style="margin-top:10px;font-size:13px;color:var(--text-sub);"></div>
+  <div class="toolbar" style="margin-top:14px;">
+    <button id="reconcileBtn" disabled>Start Reconciliation</button>
+    <button class="secondary" id="clearFileBtn">Clear file</button>
   </div>
 </div>
+
+<div id="results" style="display:none;">
+  <div id="summary"></div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Share with your accountant</strong>
+      <button id="downloadExcel">Download Full Excel Report</button>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);">One workbook, one sheet per Fund Transfer ledger (18 in total) &mdash; each with that ledger's summary table and the exact break transactions underneath it &mdash; plus a Matrix sheet for a quick overview.</div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Reconciliation Matrix</strong>
+      <span class="badge" id="matrixBadge"></span>
+      <button class="secondary" id="downloadCsv">Download Matrix as CSV</button>
+      <button class="secondary" id="clearBtn">Upload a different file</button>
+    </div>
+    <div class="matrix-wrap"><table id="matrixTable"></table></div>
+  </div>
+
+  <div class="card">
+    <strong>Top Mismatches</strong>
+    <ol class="mismatch-list" id="mismatchList" style="margin-top:10px;"></ol>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <strong>Fund Transfer Ledgers</strong>
+      <span class="badge" id="perLedgerBadge"></span>
+    </div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:10px;">Click a ledger in the list to view its reconciliation summary &mdash; same as picking it from the dropdown in your Excel file, one at a time.</div>
+    <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+      <div id="ledgerList" style="width:280px;flex-shrink:0;border:1px solid var(--border);border-radius:6px;max-height:560px;overflow:auto;"></div>
+      <div id="ledgerDetailPane" style="flex:1;min-width:320px;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Ledger / Branch mapping used (click to view or verify)</summary>
+      <div id="mappingTables"></div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:8px;">Source: Fund Transfer.xlsx &ndash; Summary sheet master tables (T6:W23 and B7:C23), captured 18-Jul-2026. If new branches or FT ledgers are added, this script's embedded list must be updated to include them.</div>
+    </details>
+  </div>
+</div>
+</div><!-- /mainApp -->
 
 <script>
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let scanner    = null;
-let isScanning = false;
-let records    = JSON.parse(localStorage.getItem('qr_records') || '[]');
-let webAppUrl  = 'https://script.google.com/macros/s/AKfycbwXk4jMLIA2_VkcysUGvfvPH8nrYpvktXTgi6tIEDyibxjKsMb9dQQ8XsXFIIFGchz6/exec';
-let folderId   = '1NvNb5v1rLsMutPsjXQ1UADiUiq7vNey9';
-let lastQR     = '', cooldown = false;
-let _modalFn   = ()=>{};
-let _previewFile = null; // {id, name, content, url}
-
-const COLORS = ['#7b5cff','#00e5a0','#ff4d6d','#ffbe0b','#00b4d8','#f77f00','#9b5de5','#00bbf9'];
-function avatarColor(name){ let h=0; for(let c of name) h=(h*31+c.charCodeAt(0))&0xffff; return COLORS[h%COLORS.length]; }
-function initials(name){ return name.trim().split(/\s+/).map(w=>w[0].toUpperCase()).slice(0,2).join(''); }
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-(function(){
-  document.getElementById('inp-url').value = webAppUrl;
-  document.getElementById('inp-folder-id').value = folderId;
-  setStatus('ok','☁ Connected — scans sync to Google Sheets');
-  setDriveStatus('ok','📁 Folder set — browsing CSVs');
-  setCloudPill(true);
-  loadDriveFiles();
-  render();
+// ---- theme ----
+function setTheme(mode){
+  document.documentElement.dataset.theme = mode;
+  localStorage.setItem('ft_theme', mode);
+}
+(function initTheme(){
+  setTheme(localStorage.getItem('ft_theme') || 'light');
 })();
 
-// ── TAB ───────────────────────────────────────────────────────────────────────
-function switchTab(t){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('tab-'+t+'-btn').classList.add('active');
-  document.getElementById('tab-'+t).classList.add('active');
+// ---- Master mapping (embedded from Summary!T6:W23 and Summary!B7:C23) ----
+const LEDGERS = [
+  ['10014200','FT - PRPL -CHE','Chennai','133001'],
+  ['10014207','FT - PRPL -MDU','Madurai','133050'],
+  ['10014208','FT - PRPL -TVM','Tiruvanandapuram','132001'],
+  ['10014209','FT - PRPL -EKM','Ernakulam','132000'],
+  ['10014211','FT - PRPL -NGL','Nagerkovil','133065'],
+  ['10014202','FT - PRPL -PDY','Pondy','134000'],
+  ['10014206','FT - PRPL -TRY','Trichy','133055'],
+  ['10014210','FT - PRPL -TVL','Tirunelveli','133060'],
+  ['10014219','FT - PRPL -PADI','Padi','133003'],
+  ['10014201','FT - PRPL -CHR','Chrompet','133002'],
+  ['10014203','FT - PRPL -CBE','Coimbatore','133040'],
+  ['10014204','FT - PRPL -SLM','Salem','133045'],
+  ['10014218','FT - PRPL -HO','HO','133000'],
+  ['10014222','FT - PRPL -Kanchi','Kancheepuram','133004'],
+  ['10014220','FT - PRPL -TPTY','Tirupathi','137000'],
+  ['10014205','FT - PRPL -BLR','Bangalore','129000'],
+  ['10014223','FT - PRPL -Sivakasi','Sivakasi','133051'],
+  ['10014221','FT - PRPL -MUM','Mumbai','127000'],
+]; // [ledgerNo, ledgerName, homeBranch, homeSegmentCode]
+
+const BRANCHES = [
+  ['132001','Tiruvanandapuram'],['133000','HO'],['132000','Ernakulam'],
+  ['133060','Tirunelveli'],['134000','Pondy'],['133001','Chennai'],
+  ['133050','Madurai'],['133055','Trichy'],['133065','Nagerkovil'],
+  ['133004','Kancheepuram'],['133040','Coimbatore'],['133002','Chrompet'],
+  ['133045','Salem'],['133003','Padi'],['129000','Bangalore'],
+  ['127000','Mumbai'],['133051','Sivakasi'],['137000','Tirupathi'],
+]; // [segmentCode, branchName]
+
+const LEDGER_BY_DESC = {}; // GL Description -> home branch name (for VLOOKUP replication)
+LEDGERS.forEach(l => LEDGER_BY_DESC[l[1]] = l[2]);
+
+const LEDGER_BY_BRANCH = {}; // home branch name -> that branch's own ledger number (used for the self-reference guard)
+LEDGERS.forEach(l => LEDGER_BY_BRANCH[l[2]] = l[0]);
+
+const REQUIRED_COLS = ['Amount in Local Currency','Segment','G/L Account','GL Description'];
+const OPTIONAL_COLS = ['Document Number','Posting Date','Document Type','Text','Segment Name','Offsetting Account','Offset Account Description','Assignment','Clearing Document','Reversal Indicator'];
+let UPLOADED_HEADERS = []; // every column exactly as it appears in the uploaded file, in original order — used to export full, un-shrunk data
+
+function norm(x){ return (x===null||x===undefined) ? '' : String(x).trim(); }
+function fmt(n){
+  if (Math.abs(n) < 0.005) return '-';
+  return n.toLocaleString('en-IN', {maximumFractionDigits:0});
 }
 
-// ── RENDER ────────────────────────────────────────────────────────────────────
-function render(){ renderPeopleTab(); renderAllTab(); }
+function showError(msg){
+  const e = document.getElementById('error');
+  e.textContent = msg;
+  e.style.display = msg ? 'block' : 'none';
+}
 
-/* BY PERSON TAB */
-function renderPeopleTab(){
-  const list = document.getElementById('people-list');
+function handleFile(file){
+  showError('');
+  document.getElementById('fileInfo').textContent = 'Reading ' + file.name + ' ...';
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const sheetName = wb.SheetNames.includes('Data') ? 'Data' : wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      if (!rows.length) { showError('The selected sheet is empty.'); return; }
+      const headers = rows[0].map(h => norm(h));
+      const headerPairs = headers.map((h, idx) => ({h, idx})).filter(p => p.h !== '');
+      UPLOADED_HEADERS = headerPairs.map(p => p.h);
+      const rawColIdxs = headerPairs.map(p => p.idx);
+      const colIdx = {};
+      REQUIRED_COLS.forEach(c => colIdx[c] = headers.indexOf(c));
+      OPTIONAL_COLS.forEach(c => colIdx[c] = headers.indexOf(c));
+      const missing = REQUIRED_COLS.filter(c => colIdx[c] === -1);
+      if (missing.length){
+        showError('Missing required column(s) in "' + sheetName + '" sheet: ' + missing.join(', ') + '. Found columns: ' + headers.filter(h=>h).join(', '));
+        return;
+      }
+      function getCol(r, name){
+        const idx = colIdx[name];
+        return idx === -1 || idx === undefined ? '' : r[idx];
+      }
+      const records = [];
+      let reversedCount = 0, reversedAmount = 0;
+      const hasReversalCol = colIdx['Reversal Indicator'] !== -1 && colIdx['Reversal Indicator'] !== undefined;
+      for (let i=1; i<rows.length; i++){
+        const r = rows[i];
+        if (!r || r.length===0) continue;
+        const amt = parseFloat(getCol(r,'Amount in Local Currency'));
+        if (isNaN(amt)) continue;
+        // Column U — Reversal Indicator. Any non-blank value means this row has been reversed
+        // and must be excluded from every reconciliation calculation.
+        const reversalFlag = norm(getCol(r,'Reversal Indicator'));
+        if (reversalFlag !== ''){
+          reversedCount++;
+          reversedAmount += amt;
+          continue;
+        }
+        let postingDate = getCol(r,'Posting Date');
+        if (postingDate instanceof Date) postingDate = postingDate.toLocaleDateString('en-IN');
+        else postingDate = norm(postingDate);
+        // Full, un-shrunk copy of every original column for this row, in original order —
+        // used so downloaded difference/break sheets can show the complete source data, not a trimmed subset.
+        const rawRow = rawColIdxs.map(idx => {
+          const v = r[idx];
+          if (v===undefined || v===null) return '';
+          if (v instanceof Date) return v.toLocaleDateString('en-IN'); // avoid Excel-serial/timezone round-trip issues on export
+          return v;
+        });
+        records.push({
+          amount: amt,
+          segment: norm(getCol(r,'Segment')),
+          glAccount: norm(getCol(r,'G/L Account')),
+          glDescription: norm(getCol(r,'GL Description')),
+          docNumber: norm(getCol(r,'Document Number')),
+          docType: norm(getCol(r,'Document Type')),
+          postingDate: postingDate,
+          text: norm(getCol(r,'Text')),
+          segmentName: norm(getCol(r,'Segment Name')),
+          offsetAcct: norm(getCol(r,'Offsetting Account')),
+          offsetDesc: norm(getCol(r,'Offset Account Description')),
+          assignment: norm(getCol(r,'Assignment')),
+          raw: rawRow,
+        });
+      }
+      window.__pendingRecords = records;
+      let infoMsg = 'Loaded ' + records.length.toLocaleString('en-IN') + ' transaction rows from "' + file.name + '" (sheet: ' + sheetName + ').';
+      if (hasReversalCol){
+        infoMsg += ' Excluded ' + reversedCount.toLocaleString('en-IN') + ' reversed row(s) (Reversal Indicator column) totalling ₹' + reversedAmount.toLocaleString('en-IN', {maximumFractionDigits:0}) + ' — not considered in any calculation.';
+      }
+      infoMsg += ' Click "Start Reconciliation" to proceed.';
+      document.getElementById('fileInfo').textContent = infoMsg;
+      document.getElementById('reconcileBtn').disabled = false;
+      document.getElementById('results').style.display = 'none';
+    } catch(err){
+      showError('Could not read this file: ' + err.message);
+      window.__pendingRecords = null;
+      document.getElementById('reconcileBtn').disabled = true;
+    }
+  };
+  reader.onerror = function(){ showError('Failed to read the file.'); };
+  reader.readAsArrayBuffer(file);
+}
+
+function buildMatrix(records){
+  window.__lastRecords = records; // kept for on-demand transaction drill-down (break analysis)
+  // matrix[ledgerIdx][branchIdx] = difference
+  const matrix = LEDGERS.map(() => BRANCHES.map(() => 0));
+
+  LEDGERS.forEach((L, li) => {
+    const [ledgerNo, ledgerName, homeBranch, homeSeg] = L;
+    BRANCHES.forEach((B, bi) => {
+      const [branchSeg, branchName] = B;
+      const isSelfPair = LEDGER_BY_BRANCH[branchName] === ledgerNo; // same guard as the workbook's IF($E$3=C7,0,...)
+      let d = 0, e = 0;
+      for (const r of records){
+        if (r.glAccount === ledgerNo && r.segment === branchSeg) d += r.amount;
+        if (!isSelfPair && homeSeg && r.segment === homeSeg && LEDGER_BY_DESC[r.glDescription] === branchName) e += r.amount;
+      }
+      matrix[li][bi] = d + e;
+    });
+  });
+
+  renderMatrix(matrix);
+  renderMismatches(matrix);
+  renderSummary(matrix);
+  renderMapping();
+  renderPerLedgerSummary(records);
+  document.getElementById('results').style.display = 'block';
+}
+
+function computeLedgerSummary(homeLedger, records){
+  const [homeNo, homeName, homeBranch, homeSeg] = homeLedger;
+  const rows = LEDGERS.map(r => {
+    const [rNo, rName, rBranch, rSeg] = r;
+    let e = 0;
+    if (rSeg){
+      for (const rec of records) if (rec.glAccount === homeNo && rec.segment === rSeg) e += rec.amount;
+    }
+    let f = 0;
+    if (homeNo !== rNo){
+      for (const rec of records) if (rec.glAccount === rNo && rec.segment === homeSeg) f += rec.amount;
+    }
+    return { segCode: rSeg || '—', glNo: rNo, glName: rName, branch: rBranch, e, f, g: e + f };
+  });
+  const totE = rows.reduce((a,r)=>a+r.e,0);
+  const totF = rows.reduce((a,r)=>a+r.f,0);
+  const totG = rows.reduce((a,r)=>a+r.g,0);
+  return { rows, totE, totF, totG };
+}
+
+function txnTable(title, txns, sumLabel){
+  let h = `<div style="font-weight:600;font-size:12px;margin:8px 0 4px;color:var(--heading-txt);">${title} <span style="font-weight:400;color:var(--text-sub);">(${txns.length} entr${txns.length===1?'y':'ies'})</span></div>`;
+  if (!txns.length){
+    h += '<div style="font-size:12px;color:var(--muted-txt);margin-bottom:8px;">No transactions found on this side.</div>';
+    return h;
+  }
+  h += '<table style="font-size:11px;margin-bottom:10px;"><thead><tr><th class="label">Posting Date</th><th class="label">Document No.</th><th class="label">Doc Type</th><th>Amount</th><th class="label">Text</th><th class="label">Offset A/c</th></tr></thead><tbody>';
+  let sum = 0;
+  txns.forEach(t => {
+    sum += t.amount;
+    h += `<tr><td class="label">${t.postingDate||'—'}</td><td class="label">${t.docNumber||'—'}</td><td class="label">${t.docType||'—'}</td><td>${fmt(t.amount)}</td><td class="label">${t.text||'—'}</td><td class="label">${t.offsetDesc||t.offsetAcct||'—'}</td></tr>`;
+  });
+  h += `<tr class="totalrow"><td class="label" colspan="3">${sumLabel}</td><td>${fmt(sum)}</td><td class="label" colspan="2"></td></tr>`;
+  h += '</tbody></table>';
+  return h;
+}
+
+// Nets every transaction on both sides against its absolute value (SUMIFS on ABS(Amount)) and
+// drops any group that cancels out to zero — what's left is the exact figure behind the Difference.
+function computeExactDifference(cpTxns, rpTxns){
+  const combined = cpTxns.map(t => Object.assign({}, t, {side:'Counter Party'}))
+    .concat(rpTxns.map(t => Object.assign({}, t, {side:'Respective'})));
   const groups = {};
-  records.forEach((r,i)=>{ const key=(r.name||'').trim()||'(no name)'; if(!groups[key])groups[key]=[]; groups[key].push({r,i}); });
-  const names = Object.keys(groups).sort();
-  if(!names.length){ list.innerHTML=`<div class="people-empty"><div class="icon">👤</div>No scans yet</div>`; return; }
+  combined.forEach(t => {
+    const key = Math.abs(round2(t.amount)).toFixed(2);
+    if (!groups[key]) groups[key] = { sum: 0, txns: [] };
+    groups[key].sum += t.amount;
+    groups[key].txns.push(t);
+  });
+  const exactItems = [];
+  Object.keys(groups).forEach(key => {
+    const g = groups[key];
+    if (Math.abs(round2(g.sum)) > 0.01){ // ignore groups that SUMIFS nets to zero — they're already matched
+      g.txns.forEach(t => exactItems.push(t));
+    }
+  });
+  exactItems.sort((a,b) => Math.abs(b.amount) - Math.abs(a.amount));
+  const exactTotal = round2(exactItems.reduce((a,t) => a + t.amount, 0));
+  return { exactItems, exactTotal, ignoredCount: combined.length - exactItems.length };
+}
 
-  list.innerHTML = names.map(name=>{
-    const items=groups[name], count=items.length;
-    const synced=items.filter(x=>x.r.synced).length;
-    const col=avatarColor(name), ini=initials(name);
-    const rows=items.map(({r,i},pos)=>`
-      <tr>
-        <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.68rem">${pos+1}</td>
-        <td class="pt-qr" title="${esc(r.qr)}">${esc(r.qr)}</td>
-        <td class="pt-reason" title="${esc(r.reason)}">${esc(r.reason)||'<span style="color:var(--muted)">—</span>'}</td>
-        <td class="pt-time">${r.time}</td>
-        <td style="text-align:center">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
-        <td><button class="pt-del" onclick="deleteSingle(${i})">✕</button></td>
-       </tr>`).join('');
+function exactDiffTable(exactItems, exactTotal, expectedDiff){
+  let h = `<div style="font-weight:700;font-size:13px;margin:6px 0 4px;color:var(--heading-txt);">Exact Difference &mdash; after netting equal &amp; opposite entries <span style="font-weight:400;color:var(--text-sub);">(${exactItems.length} entr${exactItems.length===1?'y':'ies'} remain)</span></div>`;
+  if (!exactItems.length){
+    h += '<div style="font-size:12px;color:var(--muted-txt);margin-bottom:8px;">Everything on both sides cancelled out — no residual difference found.</div>';
+    return h;
+  }
+  h += '<table style="font-size:11px;margin-bottom:6px;"><thead><tr><th class="label">Side</th><th class="label">Posting Date</th><th class="label">Document No.</th><th class="label">Doc Type</th><th>Amount</th><th class="label">Text</th><th class="label">Offset A/c</th></tr></thead><tbody>';
+  exactItems.forEach(t => {
+    h += `<tr><td class="label">${t.side}</td><td class="label">${t.postingDate||'—'}</td><td class="label">${t.docNumber||'—'}</td><td class="label">${t.docType||'—'}</td><td class="mismatch">${fmt(t.amount)}</td><td class="label">${t.text||'—'}</td><td class="label">${t.offsetDesc||t.offsetAcct||'—'}</td></tr>`;
+  });
+  h += `<tr class="totalrow"><td class="label" colspan="4">Exact Difference Total</td><td class="mismatch">${fmt(exactTotal)}</td><td class="label" colspan="2"></td></tr>`;
+  h += '</tbody></table>';
+  if (expectedDiff !== undefined && Math.abs(round2(exactTotal - expectedDiff)) <= 1){
+    h += '<div style="font-size:11px;color:var(--green-txt);margin-bottom:10px;">✓ Matches the Difference column.</div>';
+  } else {
+    h += '<div style="font-size:11px;color:var(--text-sub);margin-bottom:10px;"></div>';
+  }
+  return h;
+}
 
-    const hasDrive = !!(webAppUrl && folderId);
-    return `
-    <div class="person-card">
-      <div class="person-header" onclick="togglePerson('${esc(name)}')" id="phdr-${esc(name)}">
-        <div class="person-avatar" style="background:${col}">${ini}</div>
-        <div class="person-info">
-          <div class="person-name">${esc(name)}</div>
-          <div class="person-meta">${count} scan${count!==1?'s':''} · ☁ ${synced}/${count} · Last: ${items[0].r.time}</div>
-        </div>
-        <div class="person-actions" onclick="event.stopPropagation()">
-          <button class="p-btn p-btn-dl"    onclick="downloadPersonCSV('${esc(name)}')">⬇</button>
-          ${hasDrive?`<button class="p-btn p-btn-drive" onclick="savePersonToDrive('${esc(name)}')">📁</button>`:''}
-          <button class="p-btn p-btn-del"   onclick="deletePersonPrompt('${esc(name)}')">🗑</button>
-        </div>
-        <span class="chevron">▼</span>
-      </div>
-      <div class="person-rows" id="prows-${esc(name)}">
-        <div class="person-table-wrap">
-          <table class="ptable">
-            <thead><tr><th>#</th><th>QR Value</th><th>Reason</th><th>Time</th><th>☁</th><th></th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      </div>
+function toggleBreakDetail(rowId, homeLedgerNo, branchSegCode, branchLedgerNo, expectedDiff){
+  const row = document.getElementById(rowId);
+  const content = document.getElementById(rowId + '-content');
+  if (row.style.display === 'none'){
+    row.style.display = 'table-row';
+    if (!content.dataset.loaded){
+      const records = window.__lastRecords || [];
+      const home = LEDGERS.find(l => l[0] === homeLedgerNo);
+      const homeSeg = home ? home[3] : '';
+      const counterPartyTxns = (branchSegCode && branchSegCode !== '—')
+        ? records.filter(r => r.glAccount === homeLedgerNo && r.segment === branchSegCode)
+        : [];
+      const respectiveTxns = (homeLedgerNo !== branchLedgerNo)
+        ? records.filter(r => r.glAccount === branchLedgerNo && r.segment === homeSeg)
+        : [];
+      const { exactItems, exactTotal } = computeExactDifference(counterPartyTxns, respectiveTxns);
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">`
+        + `<div style="font-size:11px;color:var(--text-sub);">Break for GL ${homeLedgerNo} vs Segment ${branchSegCode} (GL ${branchLedgerNo}).</div>`
+        + `<button class="secondary" style="font-size:11px;padding:5px 10px;flex-shrink:0;" onclick="downloadRowBreak('${homeLedgerNo}','${branchSegCode}','${branchLedgerNo}')">Download this difference (Excel)</button>`
+        + `</div>`;
+      html += exactDiffTable(exactItems, exactTotal, expectedDiff);
+      html += `<details><summary style="font-size:11px;">Show full transaction list on both sides (for reference)</summary>`;
+      html += txnTable('Counter Party Side &mdash; booked by the counterparty branch using this ledger', counterPartyTxns, 'Counter Party Total');
+      html += txnTable('Respective Side &mdash; booked by the home branch using the counterparty’s ledger', respectiveTxns, 'Respective Total');
+      html += `</details>`;
+      content.innerHTML = html;
+      content.dataset.loaded = '1';
+    }
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+async function downloadRowBreak(homeLedgerNo, branchSegCode, branchLedgerNo){
+  const records = window.__lastRecords || [];
+  const home = LEDGERS.find(l => l[0] === homeLedgerNo);
+  const cp = LEDGERS.find(l => l[0] === branchLedgerNo);
+  if (!home || !cp){ showError('Could not find this ledger pair.'); return; }
+  const homeSeg = home[3];
+  const branchName = cp[2];
+
+  const counterPartyTxns = (branchSegCode && branchSegCode !== '—')
+    ? records.filter(r => r.glAccount === homeLedgerNo && r.segment === branchSegCode)
+    : [];
+  const respectiveTxns = (homeLedgerNo !== branchLedgerNo)
+    ? records.filter(r => r.glAccount === branchLedgerNo && r.segment === homeSeg)
+    : [];
+
+  const { exactItems, exactTotal } = computeExactDifference(counterPartyTxns, respectiveTxns);
+  const amtIdx = UPLOADED_HEADERS.indexOf('Amount in Local Currency');
+
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Break');
+  ws.addRow([`Break: ${home[2]} (GL ${homeLedgerNo}) vs ${branchName} (GL ${branchLedgerNo})`]);
+  ws.addRow([]);
+  ws.addRow(['EXACT DIFFERENCE — after netting equal & opposite entries (SUMIFS on ABS amount, zero-net groups ignored). Every original column shown below, un-shrunk. Blue rows = Counter Party, orange rows = Respective Party.']);
+  let headerRow = ws.addRow(['Side', ...UPLOADED_HEADERS]);
+  styleHeaderRow(headerRow);
+  addTxnRows(ws, exactItems);
+  ws.addRow(['Exact Difference Total', ...UPLOADED_HEADERS.map((h,i) => i===amtIdx ? round2(exactTotal) : '')]).font = {bold:true};
+  ws.addRow([]);
+  ws.addRow([]);
+  ws.addRow(['Full Transaction List (reference) — both sides before netting. Blue rows = Counter Party, orange rows = Respective Party.']);
+  headerRow = ws.addRow(['Side', ...UPLOADED_HEADERS]);
+  styleHeaderRow(headerRow);
+  addTxnRows(ws, counterPartyTxns, 'Counter Party');
+  addTxnRows(ws, respectiveTxns, 'Respective');
+  const total = counterPartyTxns.reduce((a,t)=>a+t.amount,0) + respectiveTxns.reduce((a,t)=>a+t.amount,0);
+  ws.addRow(['Difference', ...UPLOADED_HEADERS.map((h,i) => i===amtIdx ? round2(total) : '')]).font = {bold:true};
+  sizeColumns(ws);
+
+  await downloadWorkbookExcelJS(wb, `${home[2]} vs ${branchName} - Break.xlsx`);
+}
+
+function renderPerLedgerSummary(records){
+  document.getElementById('perLedgerBadge').textContent = LEDGERS.length + ' ledgers';
+
+  const list = document.getElementById('ledgerList');
+  list.innerHTML = LEDGERS.map(L => {
+    const { totG } = computeLedgerSummary(L, records);
+    const dot = Math.abs(totG) > 1 ? '<span class="mismatch-dot"></span>' : '';
+    return `<div class="ledger-item" id="li-${L[0]}" onclick="selectLedgerFromList('${L[0]}')">
+      <div>${dot}${L[2]} <span style="color:inherit;opacity:.65;font-weight:400;">(GL ${L[0]})</span></div>
+      <div class="sub">${L[1]}</div>
     </div>`;
   }).join('');
+
+  selectLedgerFromList(LEDGERS[0][0]);
 }
 
-function togglePerson(name){
-  const rows=document.getElementById('prows-'+name);
-  const hdr=document.getElementById('phdr-'+name);
-  hdr.classList.toggle('open', rows.classList.toggle('open'));
+function selectLedgerFromList(ledgerNo){
+  const records = window.__lastRecords;
+  if (!records) return;
+
+  document.querySelectorAll('.ledger-item').forEach(el => el.classList.remove('active'));
+  const li = document.getElementById('li-' + ledgerNo);
+  if (li) li.classList.add('active');
+
+  const L = LEDGERS.find(l => l[0] === ledgerNo);
+  const pane = document.getElementById('ledgerDetailPane');
+  const { rows, totE, totF, totG } = computeLedgerSummary(L, records);
+  const mismatched = Math.abs(totG) > 1;
+
+  let html = `<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:6px;">`;
+  html += `<div style="font-weight:700;color:var(--heading-txt);">${L[2]} &mdash; ${L[1]} <span style="font-weight:400;color:var(--text-sub);">(GL ${L[0]})</span></div>`;
+  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;">`;
+  html += `<button class="secondary" style="font-size:12px;padding:6px 10px;" onclick="downloadLedgerSummaryAndDifference('${L[0]}')">Download Summary &amp; Difference (Excel)</button>`;
+  html += `</div></div>`;
+  html += '<div style="font-size:11px;color:var(--text-sub);margin-bottom:6px;">Click a segment code to see the exact transactions causing the break, or use the Download column to get that row\'s difference straight away.</div>';
+  html += '<table><thead><tr><th class="label">Segment</th><th class="label">GL Number</th><th class="label">Ledger Name</th><th class="label">Segment Name</th><th>Counter Party Balance</th><th>Respective Balance</th><th>Difference</th><th class="label">Download</th></tr></thead><tbody>';
+  rows.forEach((r, ri) => {
+    const cls = Math.abs(r.g) > 1 ? 'mismatch' : 'zero';
+    const rowId = 'brk-' + L[0] + '-' + ri;
+    const clickable = Math.abs(r.g) > 1;
+    const downloadCell = clickable
+      ? `<button class="secondary" style="font-size:11px;padding:4px 8px;" onclick="event.stopPropagation();downloadRowBreak('${L[0]}','${r.segCode}','${r.glNo}')">⬇ Excel</button>`
+      : `<span style="color:var(--muted-txt);font-size:11px;">&mdash;</span>`;
+    html += `<tr${clickable ? ` style="cursor:pointer;" onclick="toggleBreakDetail('${rowId}','${L[0]}','${r.segCode}','${r.glNo}',${round2(r.g)})"` : ''}>`
+      + `<td class="label">${r.segCode}${clickable ? ' 🔍' : ''}</td><td class="label">${r.glNo}</td><td class="label">${r.glName}</td><td class="label">${r.branch}</td><td>${fmt(r.e)}</td><td>${fmt(r.f)}</td><td class="${cls}">${fmt(r.g)}</td><td class="label">${downloadCell}</td></tr>`;
+    html += `<tr id="${rowId}" style="display:none;"><td colspan="8" style="padding:0;background:var(--detail-bg);"><div id="${rowId}-content" style="padding:10px 14px;"></div></td></tr>`;
+  });
+  const totCls = mismatched ? 'mismatch' : 'zero';
+  html += `<tr class="totalrow"><td class="label" colspan="4">Total</td><td>${fmt(totE)}</td><td>${fmt(totF)}</td><td class="${totCls}">${fmt(totG)}</td><td class="label"></td></tr>`;
+  html += '</tbody></table>';
+  pane.innerHTML = html;
 }
 
-/* ALL RECORDS TAB */
-function renderAllTab(){
-  const tbody=document.getElementById('log-body'), empty=document.getElementById('empty-state');
-  document.getElementById('log-count').textContent=records.length+(records.length===1?' entry':' entries');
-  ['btn-csv','btn-sync','btn-clear','btn-drive-all'].forEach(id=>document.getElementById(id).disabled=!records.length);
-  if(!records.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-  tbody.innerHTML=records.map((r,i)=>`
-     <tr>
-      <td style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.7rem">${i+1}</td>
-      <td class="td-name">${esc(r.name)||'<span style="color:var(--muted)">—</span>'}</td>
-      <td class="td-qr" title="${esc(r.qr)}">${esc(r.qr)}</td>
-      <td class="td-reason" title="${esc(r.reason)}">${esc(r.reason)||'<span style="color:var(--muted)">—</span>'}</td>
-      <td class="td-time">${r.time}</td>
-      <td class="td-sync">${r.synced?'☁✓':'<span style="color:var(--muted)">💾</span>'}</td>
-      <td><button class="del-btn" onclick="deleteSingle(${i})">✕</button></td>
-     </tr>`).join('');
+function renderSummary(matrix){
+  let grand = 0, mismatchCount = 0, cleanCount = 0;
+  matrix.forEach(row => row.forEach(v => {
+    grand += v;
+    if (Math.abs(v) > 1) mismatchCount++; else cleanCount++;
+  }));
+  const stats = [
+    ['Total unreconciled value', '₹' + fmt(grand)],
+    ['Mismatched branch-pairs', mismatchCount.toLocaleString('en-IN')],
+    ['Clean branch-pairs', cleanCount.toLocaleString('en-IN')],
+    ['FT ledgers checked', LEDGERS.length],
+  ];
+  document.getElementById('summary').innerHTML = stats.map(s =>
+    `<div class="stat"><div class="num">${s[1]}</div><div class="lbl">${s[0]}</div></div>`
+  ).join('');
 }
 
-// ── DRIVE FOLDER ──────────────────────────────────────────────────────────────
-function saveFolderId(){
-  const v=document.getElementById('inp-folder-id').value.trim();
-  if(!v){showToast('Enter Folder ID first',true);return;}
-  folderId=v; localStorage.setItem('drive_folder',v);
-  setDriveStatus('ok','📁 Folder set — browsing CSVs');
-  showToast('✓ Folder ID saved!');
-  loadDriveFiles();
+function renderMatrix(matrix){
+  let html = '<thead><tr><th class="label">Home Ledger \\ Counterparty Branch</th>';
+  BRANCHES.forEach(b => html += `<th>${b[1]}</th>`);
+  html += '<th>Total</th></tr></thead><tbody>';
+
+  const colTotals = BRANCHES.map(()=>0);
+  let grandTotal = 0;
+
+  LEDGERS.forEach((L, li) => {
+    const rowTotal = matrix[li].reduce((a,b)=>a+b,0);
+    html += `<tr><td class="label">${L[2]} <span style="color:var(--text-sub);font-weight:400;">(${L[1]})</span></td>`;
+    matrix[li].forEach((v, bi) => {
+      colTotals[bi] += v;
+      const cls = Math.abs(v) > 1 ? 'mismatch' : 'zero';
+      html += `<td class="${cls}">${fmt(v)}</td>`;
+    });
+    grandTotal += rowTotal;
+    const cls = Math.abs(rowTotal) > 1 ? 'mismatch totalcol' : 'zero totalcol';
+    html += `<td class="${cls}">${fmt(rowTotal)}</td></tr>`;
+  });
+
+  html += `<tr class="totalrow"><td class="label">Column Total</td>`;
+  colTotals.forEach(v => html += `<td>${fmt(v)}</td>`);
+  html += `<td>${fmt(grandTotal)}</td></tr>`;
+  html += '</tbody>';
+
+  document.getElementById('matrixTable').innerHTML = html;
+  document.getElementById('matrixBadge').textContent = LEDGERS.length + ' x ' + BRANCHES.length;
+
+  window.__lastMatrix = matrix;
 }
 
-function setDriveStatus(t,m){
-  document.getElementById('drive-dot').className='dot '+t;
-  document.getElementById('drive-status-text').textContent=m;
-}
-
-// ── DRIVE FILE LIST ───────────────────────────────────────────────────────────
-async function loadDriveFiles(){
-  if(!webAppUrl||!folderId){
-    document.getElementById('drive-file-list').innerHTML='<div class="drive-empty">Set both Apps Script URL and Folder ID to browse</div>';
+function renderMismatches(matrix){
+  const items = [];
+  LEDGERS.forEach((L, li) => {
+    BRANCHES.forEach((B, bi) => {
+      const v = matrix[li][bi];
+      if (Math.abs(v) > 1) items.push({home: L[2], branch: B[1], value: v});
+    });
+  });
+  items.sort((a,b) => Math.abs(b.value) - Math.abs(a.value));
+  const top = items.slice(0, 20);
+  const list = document.getElementById('mismatchList');
+  if (!top.length){
+    list.innerHTML = '<li>No mismatches above ₹1 &mdash; everything reconciles.</li>';
     return;
   }
-  document.getElementById('drive-file-list').innerHTML='<div class="drive-loading"><span class="drive-spinner"></span>Loading files…</div>';
-  try{
-    const res=await appsScriptPost({action:'listFiles',folderId});
-    if(res.status!=='ok') throw new Error(res.msg||'Failed');
-    renderDriveFiles(res.files||[]);
-  }catch(e){
-    document.getElementById('drive-file-list').innerHTML=`<div class="drive-empty">⚠ ${e.message}</div>`;
-  }
+  list.innerHTML = top.map(it =>
+    `<li><strong>${it.home}</strong> vs <strong>${it.branch}</strong>: ₹${fmt(it.value)}</li>`
+  ).join('');
 }
 
-function renderDriveFiles(files){
-  const el=document.getElementById('drive-file-list');
-  if(!files.length){el.innerHTML='<div class="drive-empty">No CSV files found in this folder</div>';return;}
-  el.innerHTML=files.map(f=>`
-    <div class="drive-file-item">
-      <div class="drive-file-icon">📄</div>
-      <div class="drive-file-info">
-        <div class="drive-file-name" title="${esc(f.name)}">${esc(f.name)}</div>
-        <div class="drive-file-meta">${fmtSize(f.size)} · ${f.modified}</div>
-      </div>
-      <div class="drive-file-actions">
-        <button class="dfa-btn dfa-view" onclick="previewFile('${esc(f.id)}','${esc(f.name)}','${esc(f.url)}')">👁 View</button>
-        <button class="dfa-btn dfa-dl"   onclick="downloadDriveFile('${esc(f.id)}','${esc(f.name)}')">⬇</button>
-        <button class="dfa-btn dfa-del"  onclick="deleteDriveFilePrompt('${esc(f.id)}','${esc(f.name)}')">🗑</button>
-      </div>
-    </div>`).join('');
+function renderMapping(){
+  let h = '<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:10px;">';
+  h += '<table style="width:auto;"><thead><tr><th>Ledger No.</th><th>Ledger Name</th><th class="label">Home Branch</th><th>Segment</th></tr></thead><tbody>';
+  LEDGERS.forEach(l => h += `<tr><td>${l[0]}</td><td>${l[1]}</td><td class="label">${l[2]}</td><td>${l[3]||'&mdash;'}</td></tr>`);
+  h += '</tbody></table>';
+  h += '<table style="width:auto;"><thead><tr><th>Segment Code</th><th class="label">Branch Name</th></tr></thead><tbody>';
+  BRANCHES.forEach(b => h += `<tr><td>${b[0]}</td><td class="label">${b[1]}</td></tr>`);
+  h += '</tbody></table></div>';
+  document.getElementById('mappingTables').innerHTML = h;
 }
 
-function fmtSize(bytes){
-  if(!bytes) return '—';
-  if(bytes<1024) return bytes+'B';
-  if(bytes<1048576) return (bytes/1024).toFixed(1)+'KB';
-  return (bytes/1048576).toFixed(1)+'MB';
-}
+function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
 
-// ── PREVIEW FILE ──────────────────────────────────────────────────────────────
-async function previewFile(fileId, fileName, fileUrl){
-  _previewFile={id:fileId, name:fileName, url:fileUrl, content:null};
-  document.getElementById('preview-title').textContent=fileName;
-  document.getElementById('preview-content').innerHTML='<div class="drive-loading"><span class="drive-spinner"></span>Loading preview…</div>';
-  document.getElementById('preview-overlay').classList.add('open');
+// ── Excel export helpers (ExcelJS — used only for writing, so cell colours actually work) ──
+const CP_FILL = 'FFDCEBFA';   // light blue  — Counter Party rows
+const RP_FILL = 'FFFDE4C8';  // light orange — Respective Party rows
+const HEADER_FILL = 'FF1F4E78';
 
-  try{
-    const res=await appsScriptPost({action:'getFile', fileId});
-    if(res.status!=='ok') throw new Error(res.msg||'Could not load file');
-    _previewFile.content=res.content;
-    renderCSVPreview(res.content);
-  }catch(e){
-    document.getElementById('preview-content').innerHTML=`<div style="color:var(--danger);padding:20px;font-size:0.82rem;">⚠ ${e.message}</div>`;
-  }
-}
-
-function renderCSVPreview(csvText){
-  const lines=csvText.trim().split('\n').filter(Boolean);
-  if(!lines.length){document.getElementById('preview-content').innerHTML='<div class="drive-empty">Empty file</div>';return;}
-  const rows=lines.map(l=>parseCSVLine(l));
-  const [header,...body]=rows;
-  const th=header.map(h=>`<th>${esc(h)}</th>`).join('');
-  const tb=body.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('');
-  document.getElementById('preview-content').innerHTML=`
-    <table class="preview-table">
-      <thead><tr>${th}</tr></thead>
-      <tbody>${tb}</tbody>
-    </table>`;
-}
-
-function parseCSVLine(line){
-  const cols=[]; let cur='', inQ=false;
-  for(let i=0;i<line.length;i++){
-    const c=line[i];
-    if(c==='"'&&!inQ){inQ=true;}
-    else if(c==='"'&&inQ&&line[i+1]==='"'){cur+='"';i++;}
-    else if(c==='"'&&inQ){inQ=false;}
-    else if(c===','&&!inQ){cols.push(cur);cur='';}
-    else{cur+=c;}
-  }
-  cols.push(cur); return cols;
-}
-
-function closePreview(){ document.getElementById('preview-overlay').classList.remove('open'); _previewFile=null; }
-
-function downloadPreviewFile(){
-  if(!_previewFile?.content) return;
-  const url=URL.createObjectURL(new Blob([_previewFile.content],{type:'text/csv;charset=utf-8;'}));
-  Object.assign(document.createElement('a'),{href:url,download:_previewFile.name}).click();
-  URL.revokeObjectURL(url);
-  showToast('⬇ Downloaded!');
-}
-
-function deletePreviewFile(){
-  if(!_previewFile) return;
-  const {id,name}=_previewFile;
-  closePreview();
-  deleteDriveFilePrompt(id,name);
-}
-
-// ── DELETE DRIVE FILE ─────────────────────────────────────────────────────────
-function deleteDriveFilePrompt(fileId, fileName){
-  showModal('🗑','Delete from Drive?',
-    `"${fileName}" will be moved to Trash in Google Drive.`,
-    'Delete File',
-    async ()=>{
-      try{
-        showToast('⏳ Deleting…',false,true);
-        const res=await appsScriptPost({action:'deleteFile',fileId});
-        if(res.status!=='ok') throw new Error(res.msg||'Delete failed');
-        showToast('🗑 Deleted from Drive!');
-        loadDriveFiles();
-      }catch(e){ showToast('⚠ '+e.message,true); }
-    });
-}
-
-// ── DOWNLOAD DRIVE FILE ───────────────────────────────────────────────────────
-async function downloadDriveFile(fileId, fileName){
-  showToast('⏳ Fetching file…',false,true);
-  try{
-    const res=await appsScriptPost({action:'getFile',fileId});
-    if(res.status!=='ok') throw new Error(res.msg||'Failed');
-    const url=URL.createObjectURL(new Blob([res.content],{type:'text/csv;charset=utf-8;'}));
-    Object.assign(document.createElement('a'),{href:url,download:fileName}).click();
-    URL.revokeObjectURL(url);
-    showToast('⬇ Downloaded!');
-  }catch(e){ showToast('⚠ '+e.message,true); }
-}
-
-// ── SAVE CSV TO DRIVE ─────────────────────────────────────────────────────────
-async function saveCSVToDrive(rows, filename){
-  if(!webAppUrl||!folderId){showToast('Set Apps Script URL & Folder ID first',true);return false;}
-  const csv=rows.map(r=>r.join(',')).join('\n');
-  try{
-    const res=await appsScriptPost({action:'saveCSV',folderId,csv,filename});
-    if(res.status!=='ok') throw new Error(res.msg||'Save failed');
-    return res;
-  }catch(e){ showToast('⚠ Drive save: '+e.message,true); return false; }
-}
-
-async function saveAllToDrive(){
-  if(!records.length) return;
-  const rows=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
-    ...records.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
-  const fname='qr_all_'+new Date().toISOString().slice(0,10)+'_'+Date.now()+'.csv';
-  showToast('⏳ Saving to Drive…',false,true);
-  const res=await saveCSVToDrive(rows,fname);
-  if(res){ showToast('📁 Saved to Drive: '+res.fileName); loadDriveFiles(); }
-}
-
-async function savePersonToDrive(name){
-  const rows=records.filter(r=>(r.name||'').trim()===name||(((r.name||'').trim()===''&&name==='(no name)')));
-  if(!rows.length) return;
-  const data=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
-    ...rows.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
-  const fname='qr_'+name.replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
-  showToast('⏳ Saving to Drive…',false,true);
-  const res=await saveCSVToDrive(data,fname);
-  if(res){ showToast('📁 Saved: '+res.fileName); loadDriveFiles(); }
-}
-
-// ── DOWNLOAD LOCAL CSV ────────────────────────────────────────────────────────
-function downloadPersonCSV(name){
-  const rows=records.filter(r=>(r.name||'').trim()===name||((r.name||'').trim()===''&&name==='(no name)'));
-  if(!rows.length) return;
-  const data=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
-    ...rows.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
-  const fname='qr_'+name.replace(/[^a-z0-9]/gi,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv';
-  doCSV(data,fname);
-  showToast('⬇ '+rows.length+' records for '+name);
-}
-
-function downloadAllCSV(){
-  if(!records.length) return;
-  const data=[['#','Name','QR Value','Reason','Timestamp','Cloud Synced'],
-    ...records.map((r,i)=>[i+1,cc(r.name),cc(r.qr),cc(r.reason),cc(r.time),r.synced?'Yes':'No'])];
-  doCSV(data,'qr_log_all_'+new Date().toISOString().slice(0,10)+'.csv');
-  showToast('⬇ Full CSV downloaded!');
-}
-
-function doCSV(rows,fname){
-  const csv=rows.map(r=>r.join(',')).join('\n');
-  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  Object.assign(document.createElement('a'),{href:url,download:fname}).click();
-  URL.revokeObjectURL(url);
-}
-function cc(v){ if(!v)return''; v=String(v).replace(/"/g,'""'); return/[",\n]/.test(v)?'"'+v+'"':v; }
-
-// ── STORAGE ───────────────────────────────────────────────────────────────────
-function saveRecords(){ localStorage.setItem('qr_records',JSON.stringify(records)); }
-
-// ── APPS SCRIPT POST ──────────────────────────────────────────────────────────
-async function appsScriptPost(payload){
-  const res=await fetch(webAppUrl,{method:'POST',body:JSON.stringify(payload),headers:{'Content-Type':'text/plain'}});
-  return await res.json();
-}
-
-// ── SHEETS SYNC ───────────────────────────────────────────────────────────────
-async function syncToSheets(rec){
-  if(!webAppUrl) return false;
-  try{ const r=await appsScriptPost(rec); return r.status==='ok'; }catch{return false;}
-}
-async function retrySyncAll(){
-  const p=records.filter(r=>!r.synced);
-  if(!p.length){showToast('All synced ✓');return;}
-  if(!webAppUrl){showToast('Set Web App URL first',true);return;}
-  showToast('⏳ Syncing '+p.length+'…',false,true);
-  let ok=0;
-  for(const r of p){ if(await syncToSheets(r)){r.synced=true;ok++;} }
-  saveRecords(); render(); showToast(ok+' / '+p.length+' synced ✓');
-}
-
-// ── ADD RECORD ────────────────────────────────────────────────────────────────
-async function addRecord(qv){
-  const rec={name:document.getElementById('inp-name').value.trim(),qr:qv,reason:document.getElementById('inp-reason').value.trim(),time:now(),synced:false};
-  records.unshift(rec); saveRecords(); render();
-  showToast('✓ '+qv.slice(0,28)+(qv.length>28?'…':''));
-  if(webAppUrl){
-    const ok=await syncToSheets(rec); rec.synced=ok; saveRecords(); render();
-    if(ok) showToast('☁ Synced to Sheets!');
-    else   showToast('⚠ Saved locally — retry Sync All',false,true);
-  }
-}
-function addManual(){
-  const v=document.getElementById('inp-manual').value.trim();
-  if(!v){showToast('Enter a value first',true);return;}
-  addRecord(v); document.getElementById('inp-manual').value='';
-}
-
-// ── DELETE ────────────────────────────────────────────────────────────────────
-function deleteSingle(i){ records.splice(i,1); saveRecords(); render(); }
-
-function deletePersonPrompt(name){
-  const count=records.filter(r=>(r.name||'').trim()===name||((r.name||'').trim()===''&&name==='(no name)')).length;
-  showModal('🗑',`Delete ${name}?`,`Remove all ${count} scan${count!==1?'s':''} by "${name}"? Google Sheets data stays safe.`,
-    `Delete ${count} record${count!==1?'s':''}`,
-    ()=>{ records=records.filter(r=>!((r.name||'').trim()===name||((r.name||'').trim()===''&&name==='(no name)'))); saveRecords(); render(); showToast(`🗑 Removed all records for ${name}`); });
-}
-
-function clearLog(){
-  if(!records.length) return;
-  showModal('🗑','Clear all records?',`Remove all ${records.length} local entries? Google Sheets data stays safe.`,'Yes, Clear All',
-    ()=>{ records=[]; saveRecords(); render(); showToast('All records cleared'); });
-}
-
-// ── CAMERA ────────────────────────────────────────────────────────────────────
-function startScan(){
-  if(isScanning) return;
-  scanner=new Html5Qrcode('qr-reader');
-  scanner.start({facingMode:'environment'},{fps:12,qrbox:{width:240,height:240},aspectRatio:1.0},onScanSuccess,()=>{})
-  .then(()=>{
-    isScanning=true;
-    document.getElementById('btn-start').disabled=true;
-    document.getElementById('btn-stop').disabled=false;
-    document.getElementById('scan-badge').textContent='LIVE';
-    document.getElementById('scan-badge').className='badge live';
-  }).catch(e=>showToast('Camera error: '+e,true));
-}
-function stopScan(){
-  if(!isScanning||!scanner) return;
-  scanner.stop().then(()=>{
-    isScanning=false; scanner.clear();
-    document.getElementById('qr-reader').innerHTML='';
-    document.getElementById('btn-start').disabled=false;
-    document.getElementById('btn-stop').disabled=true;
-    document.getElementById('scan-badge').textContent='IDLE';
-    document.getElementById('scan-badge').className='badge idle';
+function styleHeaderRow(row){
+  row.eachCell({includeEmpty:true}, cell => {
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb: HEADER_FILL}};
+    cell.font = {color:{argb:'FFFFFFFF'}, bold:true};
   });
 }
-function onScanSuccess(t){
-  if(cooldown||t===lastQR) return;
-  lastQR=t; cooldown=true; addRecord(t);
-  setTimeout(()=>{cooldown=false;lastQR='';},2500);
+
+function fillForSide(side){
+  if (side === 'Counter Party') return CP_FILL;
+  if (side === 'Respective') return RP_FILL;
+  return null;
 }
 
-// ── SETUP ─────────────────────────────────────────────────────────────────────
-function toggleGuide(){
-  const b=document.getElementById('guide-body'),btn=document.getElementById('guide-btn');
-  btn.textContent=b.classList.toggle('hidden')?'▼ How to Set Up':'▲ Hide Guide';
+function styleSideRow(row, side){
+  const argb = fillForSide(side);
+  if (!argb) return;
+  row.eachCell({includeEmpty:true}, cell => {
+    cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb}};
+  });
 }
-function saveUrl(){
-  const u=document.getElementById('inp-url').value.trim();
-  if(!u){showToast('Paste URL first',true);return;}
-  if(!u.startsWith('https://')){showToast('Must start with https://',true);return;}
-  webAppUrl=u; localStorage.setItem('sheets_url',u);
-  setStatus('ok','☁ Connected'); setCloudPill(true); showToast('✓ URL saved!');
-  if(folderId) loadDriveFiles();
-}
-function setStatus(t,m){document.getElementById('status-dot').className='dot '+t;document.getElementById('status-text').textContent=m;}
-function setCloudPill(on){const e=document.getElementById('cloud-pill');e.className='cloud-pill '+(on?'on':'off');e.textContent=on?'☁ Cloud':'💾 Local';}
-function copyScript(){navigator.clipboard.writeText(document.getElementById('script-pre').textContent).then(()=>showToast('📋 Copied!'));}
 
-// ── MODAL ─────────────────────────────────────────────────────────────────────
-function showModal(icon,title,desc,label,fn){
-  document.getElementById('modal-icon').textContent=icon;
-  document.getElementById('modal-title').textContent=title;
-  document.getElementById('modal-desc').textContent=desc;
-  document.getElementById('modal-ok').textContent=label;
-  _modalFn=fn;
-  document.getElementById('modal-overlay').classList.add('open');
+// Adds one row per transaction using every original uploaded column (t.raw), prefixed by its Side label.
+function addTxnRows(ws, items, sideOverride){
+  items.forEach(t => {
+    const side = sideOverride || t.side;
+    const row = ws.addRow([side, ...(t.raw || UPLOADED_HEADERS.map(()=>''))]);
+    styleSideRow(row, side);
+  });
 }
-function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
-function runModalFn(){closeModal();_modalFn();}
-document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target.id==='modal-overlay')closeModal();});
-document.getElementById('preview-overlay').addEventListener('click',e=>{if(e.target.id==='preview-overlay')closePreview();});
 
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'):''}
-function now(){const d=new Date();return d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
-let _tt;
-function showToast(msg,isError=false,isWarn=false){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className=isError?'error':isWarn?'warn':'';
-  requestAnimationFrame(()=>t.classList.add('show'));
-  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),3200);
+function sizeColumns(ws){
+  ws.getColumn(1).width = 18;
+  UPLOADED_HEADERS.forEach((h, i) => {
+    ws.getColumn(i + 2).width = Math.max(14, Math.min(30, h.length + 4));
+  });
 }
+
+function downloadWorkbookExcelJS(wb, filename){
+  return wb.xlsx.writeBuffer().then(buffer => {
+    const blob = new Blob([buffer], {type:'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }).catch(err => showError('Could not build the Excel file: ' + err.message));
+}
+
+function addSummarySheet(wb, sheetNameStr, L, records){
+  const [no, name, branch, seg] = L;
+  const { rows, totE, totF, totG } = computeLedgerSummary(L, records);
+  const ws = wb.addWorksheet(sheetNameStr);
+  ws.addRow([`Ledger No: ${no}`, `Ledger Name: ${name}`, `Home Branch: ${branch}`, `Home Segment: ${seg || '—'}`]);
+  ws.addRow([]);
+  const headerRow = ws.addRow(['Segment','GL Number','Ledger Name','Segment Name','Counter Party Balance','Respective Balance','Difference','Status']);
+  styleHeaderRow(headerRow);
+  rows.forEach(r => ws.addRow([r.segCode, r.glNo, r.glName, r.branch, round2(r.e), round2(r.f), round2(r.g), Math.abs(r.g) > 1 ? 'MISMATCH' : 'OK']));
+  const totalRow = ws.addRow(['','','','Total', round2(totE), round2(totF), round2(totG), Math.abs(totG) > 1 ? 'MISMATCH' : 'OK']);
+  totalRow.font = {bold:true};
+  ws.columns = [{width:14},{width:14},{width:16},{width:18},{width:20},{width:18},{width:14},{width:12}];
+  return ws;
+}
+
+// Returns one entry per mismatched branch pair for this ledger, each already netted down
+// to the exact difference (via computeExactDifference).
+function computeLedgerBreaks(L, records){
+  const [no, name, branch, seg] = L;
+  const { rows } = computeLedgerSummary(L, records);
+  const breaks = [];
+  rows.forEach(r => {
+    if (Math.abs(r.g) <= 1) return;
+    const rSeg = r.segCode === '—' ? '' : r.segCode;
+    const cpTxns = rSeg ? records.filter(rec => rec.glAccount === no && rec.segment === rSeg) : [];
+    const respTxns = (no !== r.glNo) ? records.filter(rec => rec.glAccount === r.glNo && rec.segment === seg) : [];
+    const { exactItems, exactTotal } = computeExactDifference(cpTxns, respTxns);
+    breaks.push({ counterpartyBranch: r.branch, exactItems, exactTotal });
+  });
+  return breaks;
+}
+
+function addPairSheet(wb, sheetNameStr, homeBranch, counterpartyBranch, exactItems, exactTotal){
+  const ws = wb.addWorksheet(sheetNameStr);
+  ws.addRow([`${counterpartyBranch} vs ${homeBranch}`]);
+  ws.addRow(['Exact difference after netting equal & opposite amounts on both sides — zero-net groups ignored. Every original column is shown below, un-shrunk. Blue rows = Counter Party, orange rows = Respective Party.']);
+  ws.addRow([]);
+  const headerRow = ws.addRow(['Side', ...UPLOADED_HEADERS]);
+  styleHeaderRow(headerRow);
+  addTxnRows(ws, exactItems);
+  const amtIdx = UPLOADED_HEADERS.indexOf('Amount in Local Currency');
+  const totalRow = ws.addRow(['Exact Difference Total', ...UPLOADED_HEADERS.map((h,i) => i===amtIdx ? round2(exactTotal) : '')]);
+  totalRow.font = {bold:true};
+  sizeColumns(ws);
+  return ws;
+}
+
+function makeSheetNamer(reserved){
+  const used = new Set(reserved || []);
+  return function sheetName(raw){
+    let s = String(raw).replace(/[\\\/\?\*\[\]:]/g, '').trim().substring(0,31) || 'Sheet';
+    let out = s, i = 1;
+    while (used.has(out)){ out = (s.substring(0,28) + '_' + (++i)); }
+    used.add(out);
+    return out;
+  };
+}
+
+async function downloadLedgerSummaryAndDifference(ledgerNo){
+  const records = window.__lastRecords;
+  if (!records){ showError('Please run a reconciliation first.'); return; }
+  const L = LEDGERS.find(l => l[0] === ledgerNo);
+  const sheetName = makeSheetNamer();
+  const wb = new ExcelJS.Workbook();
+
+  addSummarySheet(wb, sheetName('Summary'), L, records);
+
+  const breaks = computeLedgerBreaks(L, records);
+  if (!breaks.length){
+    wb.addWorksheet(sheetName('Difference')).addRow(['Fully reconciled — no mismatches above ₹1 for this ledger.']);
+  } else {
+    breaks.forEach(b => {
+      addPairSheet(wb, sheetName(`${b.counterpartyBranch} vs ${L[2]}`), L[2], b.counterpartyBranch, b.exactItems, b.exactTotal);
+    });
+  }
+
+  await downloadWorkbookExcelJS(wb, `${L[2]} - ${L[1]} - Summary & Difference.xlsx`);
+}
+
+async function downloadExcelReport(){
+  const matrix = window.__lastMatrix;
+  const records = window.__lastRecords;
+  if (!matrix || !records){ showError('Please run a reconciliation first.'); return; }
+
+  const wb = new ExcelJS.Workbook();
+
+  // ---- Sheet 1: Matrix (quick overview across all ledgers) ----
+  const ws0 = wb.addWorksheet('Matrix');
+  const matrixHeaderRow = ws0.addRow(['Home Branch','Home Ledger No', ...BRANCHES.map(b=>b[1]), 'Total']);
+  styleHeaderRow(matrixHeaderRow);
+  const colTotals = BRANCHES.map(()=>0);
+  let grandTotal = 0;
+  LEDGERS.forEach((L, li) => {
+    const rowTotal = matrix[li].reduce((a,b)=>a+b,0);
+    grandTotal += rowTotal;
+    matrix[li].forEach((v,bi)=> colTotals[bi]+=v);
+    ws0.addRow([L[2], L[0], ...matrix[li].map(round2), round2(rowTotal)]);
+  });
+  ws0.addRow(['Column Total','', ...colTotals.map(round2), round2(grandTotal)]).font = {bold:true};
+  ws0.getColumn(1).width = 16; ws0.getColumn(2).width = 13;
+  BRANCHES.forEach((b,i)=> ws0.getColumn(i+3).width = 13);
+  ws0.getColumn(BRANCHES.length+3).width = 14;
+
+  // ---- Sheets 2 onward: one Summary sheet per ledger, plus one Difference sheet per mismatched branch pair ----
+  const sheetName = makeSheetNamer(['Matrix']);
+
+  LEDGERS.forEach(L => {
+    addSummarySheet(wb, sheetName(`${L[2]} Summary`), L, records);
+
+    const breaks = computeLedgerBreaks(L, records);
+    if (!breaks.length){
+      wb.addWorksheet(sheetName(`${L[2]} Difference`)).addRow([`${L[2]}: fully reconciled — no mismatches above ₹1.`]);
+    } else {
+      breaks.forEach(b => {
+        addPairSheet(wb, sheetName(`${b.counterpartyBranch} vs ${L[2]}`), L[2], b.counterpartyBranch, b.exactItems, b.exactTotal);
+      });
+    }
+  });
+
+  const today = new Date().toISOString().slice(0,10);
+  await downloadWorkbookExcelJS(wb, `Fund Transfer Reconciliation - ${today}.xlsx`);
+}
+
+function downloadCsv(){
+  const matrix = window.__lastMatrix;
+  if (!matrix) return;
+  let csv = 'Home Branch,' + BRANCHES.map(b=>b[1]).join(',') + ',Total\n';
+  LEDGERS.forEach((L, li) => {
+    const rowTotal = matrix[li].reduce((a,b)=>a+b,0);
+    csv += '"' + L[2] + '",' + matrix[li].map(v=>v.toFixed(2)).join(',') + ',' + rowTotal.toFixed(2) + '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fund_transfer_reconciliation.csv';
+  a.click();
+}
+
+// ---- login ----
+const VALID_USER = 'admin';
+const VALID_PASS = 'admin123';
+
+function attemptLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  if (u === VALID_USER && p === VALID_PASS){
+    err.style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+  } else {
+    err.style.display = 'block';
+  }
+}
+document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+});
+
+// If opened from the Reconciliation Hub (which already handled the login), skip this screen too.
+if (new URLSearchParams(location.search).get('auth') === '1'){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+}
+
+// ---- upload / reconcile wiring ----
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+dropzone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+dropzone.addEventListener('drop', e => { if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+document.getElementById('reconcileBtn').addEventListener('click', () => {
+  if (!window.__pendingRecords){ showError('Please upload a file first.'); return; }
+  buildMatrix(window.__pendingRecords);
+});
+
+document.getElementById('downloadCsv').addEventListener('click', downloadCsv);
+document.getElementById('downloadExcel').addEventListener('click', downloadExcelReport);
+
+document.getElementById('clearFileBtn').addEventListener('click', () => {
+  window.__pendingRecords = null;
+  fileInput.value = '';
+  document.getElementById('fileInfo').textContent = '';
+  document.getElementById('reconcileBtn').disabled = true;
+  document.getElementById('results').style.display = 'none';
+  showError('');
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('fileInfo').textContent = '';
+  window.__pendingRecords = null;
+  document.getElementById('reconcileBtn').disabled = true;
+  fileInput.value = '';
+});
 </script>
 </body>
 </html>
